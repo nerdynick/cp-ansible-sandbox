@@ -1,0 +1,21 @@
+#- hosts: preflight
+#  tasks:
+#  - import_role:
+#      name: confluent.preflight
+#    become: yes
+- hosts: zookeeper
+  pre_tasks:
+  tasks:
+  - import_role:
+      name: confluent.zookeeper
+    become: yes
+- hosts: broker
+  tasks:
+  - import_role:
+      name: confluent.kafka-broker
+    become: yes
+- hosts: control-center
+  tasks:
+  - import_role:
+      name: confluent.control-center
+    become: yes

@@ -1,0 +1,56 @@
+all:
+   vars:
+      security_mode: plaintext
+      confluent:
+         support:
+            metrics_enabled: true
+         repository:
+            debian:
+               key_url: https://packages.confluent.io/deb/5.2/archive.key
+               repository: "deb [arch=amd64] https://packages.confluent.io/deb/5.2 stable main"
+preflight:
+   hosts:
+      zk[1:3].confluent.nerdynick.net:
+      kfk[1:3].confluent.nerdynick.net:
+      ccc1.confluent.nerdynick.net:
+zookeeper:
+   hosts:
+      zk[1:3].confluent.nerdynick.net:
+   vars:
+      confluent:
+         package_name: 
+         - confluent-kafka-2.12
+         - confluent-common
+broker:
+   hosts:
+      kfk1.confluent.nerdynick.net:
+         kafka:
+            broker:
+               id: 1
+      kfk2.confluent.nerdynick.net:
+         kafka:
+            broker:
+               id: 2
+      kfk3.confluent.nerdynick.net:
+         kafka:
+            broker:
+               id: 3
+   vars:
+      confluent:
+         package_name: 
+         - confluent-kafka-2.12
+         - confluent-rebalancer
+         - confluent-common
+      kafka:
+         broker:
+            config:
+               num.partitions: 3
+               default.replication.factor: 3
+control-center:
+   hosts:
+      ccc1.confluent.nerdynick.net:
+   vars:
+      confluent:
+         package_name: 
+         - confluent-control-center
+         - confluent-common
