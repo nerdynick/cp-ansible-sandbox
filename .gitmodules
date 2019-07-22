@@ -1,0 +1,3 @@
+[submodule "cp-ansible"]
+	path = cp-ansible
+	url = git@github.com:confluentinc/cp-ansible.git
