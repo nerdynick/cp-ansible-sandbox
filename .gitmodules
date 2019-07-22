@@ -1,3 +1,6 @@
 [submodule "cp-ansible"]
 	path = cp-ansible
 	url = git@github.com:confluentinc/cp-ansible.git
+[submodule "keystore-scripts"]
+	path = keystore-scripts
+	url = git@github.com:nerdynick/keystore-scripts.git

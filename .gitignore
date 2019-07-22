@@ -1,2 +1,3 @@
 .project
 **/hosts.csv
+**/generated_ssl_files/*
