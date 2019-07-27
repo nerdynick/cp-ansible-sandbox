@@ -5,3 +5,5 @@
 **/generated_ssl_files/*.csr
 **/generated_ssl_files/*.key
 **/generated_ssl_files/*.srl
+*.keytab
+.DS_Store
