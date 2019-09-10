@@ -36,6 +36,9 @@
   - import_role:
       name: confluent.preflight
     become: yes
+    
+    
+    
 - hosts: zookeeper
   become: yes
   pre_tasks:
@@ -52,6 +55,9 @@
   tasks:
   - import_role:
       name: confluent.zookeeper
+      
+      
+      
 - hosts: broker
   become: yes
   pre_tasks:
@@ -68,6 +74,8 @@
   tasks:
   - import_role:
       name: confluent.kafka-broker
+      
+      
 - hosts: control-center
   become: yes
      
