@@ -1,26 +1,25 @@
 # cp-ansible Sandbox
 
-This is just a collection of Ansible examples scripts leveraging the [confluentinc/cp-ansible](https://github.com/confluentinc/cp-ansible) Ansible Roles.
-The goal is to capture a little of the more advance usages of the roles.
+This is a collection of Ansible example scripts leveraging the [confluentinc/cp-ansible](https://github.com/confluentinc/cp-ansible) Ansible Roles.
+The goal is to capture a number of the common setups, how to do it in Ansible, and the configurations that come into play for that setup.
 
-## The Examples
+## Examples
 
-* **Plaintext** - This is a example that stands up 3x Zookeepers, 3x Kafka, and 1x Confluent Control Center
-  * Folder: plaintext
-* **SSL Advance** - This is an example using user provided SSL Keystore/Truststore files 
-  with Ansible-Vault for passwords. This provides PLAINTEXT on 9092 and SSL on 9093. 
-  With Interbroker over PLAINTEXT and SSL for ConfluentMetricsReporter and Control Center. 
-  Control Center is also configured for SSL on the REST Interface.
-  * Folder: ssl-advance
-* **SASL_SSL with Kerberos** - This is a current work in progress
+|Example                                              |Directory    |                 Notes|
+|:----------------------------------------------------|:------------|---------------------:|
+|Basic PLAINTEXT based setup                          |plaintext    |                      |
+|SSL with One-way Authentication                      |ssl_oneway   | [1] Under Development|
+|SSL with Mutual Authentication                       |ssl_mutual   |                   [1]|
+|Kerberos with SSL, aka SASL_SSL+GSSAPI               |kerberos     |[1] Partially complete|
+|RBAC+SSL using SCRAM for inter-broker comms          |rbac_scram   |              [1] TODO|
+|RBAC+SSL using GSSAPI/KERBEROS for inter-broker comms|rbac_kerberos|              [1] TODO|
+
+[1] Includes Ansible Vault usage to obscure passwords. 
 
 
 ## Git Submodules
 
-[confluentinc/cp-ansible](https://github.com/confluentinc/cp-ansible) houses all the 
-roles. Within each example, the roles directory will symlink back to the contents of 
-the cp-ansible projects roles folder. This mimics using anisble-galaxy or git-clone 
-practices.
-
-[nerdynick/keystore-scripts](https://github.com/nerdynick/keystore-scripts) houses 
-a few scripts to help generate a self-signed set of keystores and truststores.
+|                                   Repo                                    |Description                                                  |
+|:-------------------------------------------------------------------------:|:------------------------------------------------------------|
+|   [confluentinc/cp-ansible](https://github.com/confluentinc/cp-ansible)   |Confluent Provided Ansible Roles                             |
+|[nerdynick/keystore-scripts](https://github.com/nerdynick/keystore-scripts)|Collection of simple BASH scripts for generating JKS Keystore|
