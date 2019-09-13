@@ -1,0 +1,65 @@
+- hosts: preflight
+  become: yes
+  pre_tasks:
+  - name: create ssl certificate directory
+    file:
+       path: /var/ssl/private
+       state: directory
+       mode: 0755
+  - name: copy ssl related files to host
+    synchronize:
+       src: generated_ssl_files/
+       dest: /var/ssl/private
+       rsync_opts:
+       - "--include={{inventory_hostname}}*"
+       - "--delete"
+  tasks:
+  - import_role:
+      name: confluent.preflight
+    become: yes
+    
+- hosts: zookeeper
+  become: yes
+  pre_tasks:
+  tasks:
+  - import_role:
+      name: confluent.zookeeper
+      
+- hosts: broker
+  become: yes
+  pre_tasks:
+  - name: Broker JAAS File
+    template:
+       src: jaas.j2
+       dest: "/etc/kafka/kafka_jaas.conf"
+       mode: 0640
+       vars:
+          modules:
+          - name: KafkaServer
+            module: org.apache.kafka.common.security.plain.PlainLoginModule
+            pairs:
+               username: "admin"
+               password: "test"
+               user_admin: "admin"
+               user_kafkabroker: "broker1"
+          - name: KafkaClient
+            module: org.apache.kafka.common.security.plain.PlainLoginModule
+            pairs:
+               username: "admin"
+               password: "test"
+  tasks:
+  - import_role:
+      name: confluent.kafka-broker
+      
+- hosts: control-center
+  become: yes
+  tasks:
+  - import_role:
+      name: confluent.control-center
+
+      
+- hosts: connect-distributed
+  become: yes
+  tasks:
+  - import_role:
+      name: confluent.connect-distributed

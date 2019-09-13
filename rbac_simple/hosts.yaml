@@ -1,24 +1,23 @@
 all:
    vars:
-      dns_servers: 127.0.0.53,172.31.6.113,172.31.19.72
       security_mode: plaintext
       confluent:
          support:
             metrics_enabled: true
          repository:
             debian:
-               key_url: https://packages.confluent.io/deb/5.2/archive.key
-               repository: "deb [arch=amd64] https://packages.confluent.io/deb/5.2 stable main"
+               key_url: https://packages.confluent.io/deb/5.3/archive.key
+               repository: "deb [arch=amd64] https://packages.confluent.io/deb/5.3 stable main"
 preflight:
    hosts:
       zk[1:3].confluent.nerdynick.net:
       kfk[1:3].confluent.nerdynick.net:
       ccc1.confluent.nerdynick.net:
+      con1.confluent.nerdynick.net:
 zookeeper:
    hosts:
       zk[1:3].confluent.nerdynick.net:
    vars:
-      host_spn: "nikzk/{{inventory_hostname}}@kerb.confluent.nerdynick.net"
       confluent:
          package_name: 
          - confluent-kafka-2.12
@@ -38,7 +37,6 @@ broker:
             broker:
                id: 3
    vars:
-      host_spn: "nikzk/{{inventory_hostname}}@KERB.CONFLUENT.NERDYNICK.NET"
       confluent:
          package_name: 
          - confluent-kafka-2.12
@@ -47,17 +45,46 @@ broker:
       kafka:
          broker:
             environment:
-               KAFKA_OPTS: "-Dsun.security.krb5.debug=true -Djava.security.auth.login.config=/etc/kafka/kafka_jaas.conf"
+               KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_jaas.conf"
             config:
-               listeners: "PLAINTEXT://:9092,SSL://:9093,SASL_SSL://:9094"
-               advertised.listeners: "PLAINTEXT://{{inventory_hostname}}:9092,SSL://{{inventory_hostname}}:9093,SASL_SSL://{{inventory_hostname}}:9094"
+               listeners: "PLAINTEXT://:9092,SSL://:9093,RBAC://:9094"
+               advertised.listeners: "PLAINTEXT://{{inventory_hostname}}:9092,SSL://{{inventory_hostname}}:9093,RBAC://{{inventory_hostname}}:9094"
                num.partitions: 3
                default.replication.factor: 3
                ssl.client.auth: none
-               security.inter.broker.protocol: SASL_SSL
-               sasl.enabled.mechanisms: GSSAPI
-               sasl.mechanism.inter.broker.protocol: GSSAPI
-               sasl.kerberos.service.name: nikzk
+               security.inter.broker.protocol: SSL
+               sasl.enabled.mechanisms: OAUTHBEARER
+               authorizer.class.name: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
+               confluent.authorizer.access.rule.providers: ACL,RBAC
+               super.users: User:admin;User:mds;User:matt-super
+               ldap.group.name.attribute: "group=cn"
+               ldap.group.object.class: groupOfNames
+               ldap.group.search.base: OU=Groups,DC=confluent-ps,DC=com
+               ldap.group.search.scope: 2
+               ldap.java.naming.provider.url: ldap://ec2-34-205-78-11.compute-1.amazonaws.com:389
+               ldap.java.naming.security.authentication: simple
+               ldap.java.naming.security.credentials: matt2019
+               ldap.java.naming.security.principal: cn=matt-super,ou=Users,dc=confluent-ps,dc=com
+               ldap.user.name.attribute: cn
+               ldap.user.object.class: person
+               ldap.user.search.base: OU=Users,DC=confluent-ps,DC=com
+               ldap.user.search.base.scope: 2
+               confluent.metadata.server.advertised.listeners: http://localhost:8090
+               confluent.metadata.server.authentication.roles: "**"
+               confluent.metadata.server.listeners: http://0.0.0.0:8090
+               confluent.metadata.topic.replication.factor: 1
+               confluent.metadata.server.authentication.method: BASIC
+               confluent.metadata.server.public.key.path: /etc/kafka/public.pem
+               confluent.metadata.server.token.key.path: /etc/kafka/tokenKeypair.pem
+               listener.name.rbac.oauthbearer.sasl.login.callback.handler.class: io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
+               listener.name.rbac.oauthbearer.sasl.server.callback.handler.class: io.confluent.kafka.server.plugins.auth.token.TokenBearerValidatorCallbackHandler
+               listener.name.rbac.oauthbearer.sasl.jaas.config: |
+                  " \
+                   org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                       publicKeyPath=\"/tmp/conf/public.pem\";"
+               listener.name.rbac.sasl.enabled.mechanisms: OAUTHBEARER
+               listener.security.protocol.map: PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL,RBAC:SASL_PLAINTEXT
+               
                ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
                ssl.truststore.password:  !vault | 
                                       $ANSIBLE_VAULT;1.1;AES256
@@ -81,8 +108,7 @@ broker:
                                       32326166656533343436656164353062363438333635646261326162653563336136386634643666
                                       3239616565633431320a663236336638306262613866646231666238376138663230306537666337
                                       3838
-               confluent.metrics.reporter.security.protocol: SASL_SSL
-               confluent.metrics.reporter.sasl.mechanism: GSSAPI
+               confluent.metrics.reporter.security.protocol: SSL
                confluent.metrics.reporter.bootstrap.servers: "{{inventory_hostname}}:9093"
                confluent.metrics.reporter.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
                confluent.metrics.reporter.ssl.truststore.password: !vault | 
@@ -107,6 +133,7 @@ broker:
                                       32326166656533343436656164353062363438333635646261326162653563336136386634643666
                                       3239616565633431320a663236336638306262613866646231666238376138663230306537666337
                                       3838
+                                      
 control-center:
    hosts:
       ccc1.confluent.nerdynick.net:
@@ -167,3 +194,23 @@ control-center:
                                       3239616565633431320a663236336638306262613866646231666238376138663230306537666337
                                       3838
                   confluent.controlcenter.rest.listeners: https://0.0.0.0:9021
+                  confluent.controlcenter.connect.default.cluster: "{% for host in groups['connect-distributed'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8083{% endfor %}"
+
+connect-distributed:
+  hosts:
+    con1.confluent.nerdynick.net:
+  vars:
+      confluent:
+         package_name: 
+         - confluent-common
+         - confluent-kafka-2.12
+         - confluent-kafka-connect-replicator
+      kafka:
+         connect:
+            distributed:
+               config:
+                  bootstrap.servers: "{% for host in groups['broker'] %}{% if loop.index > 1%},{% endif %}{{ host }}:9092{% endfor %}"
+                  key.converter: org.apache.kafka.connect.json.JsonConverter
+                  value.converter: org.apache.kafka.connect.json.JsonConverter
+                  
+     
