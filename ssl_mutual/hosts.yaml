@@ -3,17 +3,17 @@ all:
       security_mode: plaintext
       confluent:
          support:
-            metrics_enabled: true
-         repository:
-            debian:
-               key_url: https://packages.confluent.io/deb/5.2/archive.key
-               repository: "deb [arch=amd64] https://packages.confluent.io/deb/5.2 stable main"
+            metrics_enabled: false
+         repo_versions: 5.3
 preflight:
    hosts:
       zk[1:3].confluent.nerdynick.net:
       kfk[1:3].confluent.nerdynick.net:
       ccc1.confluent.nerdynick.net:
       con1.confluent.nerdynick.net:
+      sr1.confluent.nerdynick.net:
+      ksql1.confluent.nerdynick.net:
+      rest1.confluent.nerdynick.net:
 zookeeper:
    hosts:
       zk[1:3].confluent.nerdynick.net:
@@ -48,7 +48,7 @@ broker:
                listeners: "PLAINTEXT://:9092,SSL://:9093"
                num.partitions: 3
                default.replication.factor: 3
-               ssl.client.auth: none
+               ssl.client.auth: required
                security.inter.broker.protocol: SSL
                ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
                ssl.truststore.password:  !vault | 

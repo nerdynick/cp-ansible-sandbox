@@ -8,7 +8,7 @@
        mode: 0755
   - name: copy ssl related files to host
     synchronize:
-       src: generated_ssl_files/
+       src: ssl-certs/
        dest: /var/ssl/private
        rsync_opts:
        - "--include={{inventory_hostname}}*"

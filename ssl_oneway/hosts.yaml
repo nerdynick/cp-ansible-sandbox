@@ -3,17 +3,17 @@ all:
       security_mode: plaintext
       confluent:
          support:
-            metrics_enabled: true
-         repository:
-            debian:
-               key_url: https://packages.confluent.io/deb/5.2/archive.key
-               repository: "deb [arch=amd64] https://packages.confluent.io/deb/5.2 stable main"
+            metrics_enabled: false
+         repo_versions: 5.3
 preflight:
    hosts:
       zk[1:3].confluent.nerdynick.net:
       kfk[1:3].confluent.nerdynick.net:
       ccc1.confluent.nerdynick.net:
       con1.confluent.nerdynick.net:
+      sr1.confluent.nerdynick.net:
+      ksql1.confluent.nerdynick.net:
+      rest1.confluent.nerdynick.net:
 zookeeper:
    hosts:
       zk[1:3].confluent.nerdynick.net:
@@ -112,21 +112,6 @@ control-center:
                   bootstrap.servers: "{% for host in groups['broker'] %}{% if loop.index > 1%},{% endif %}{{ host }}:9093{% endfor %}"
                   confluent.controlcenter.streams.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
                   confluent.controlcenter.streams.ssl.truststore.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-                  confluent.controlcenter.streams.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
-                  confluent.controlcenter.streams.ssl.keystore.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-                  confluent.controlcenter.streams.ssl.key.password: !vault | 
                                       $ANSIBLE_VAULT;1.1;AES256
                                       61383466656534366132336638623938666130313533343962336634663233326262353166356432
                                       3365386339343363663166333563366634363466336531360a393466636362386238353564343939
