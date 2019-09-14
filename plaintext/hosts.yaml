@@ -50,6 +50,7 @@ kafka_broker:
             min.insync.replicas: 2
             log.retention.hours: 3 #Adjust to desired value. Set low for test envs.
             default.replication.factor: 3
+            #MetricsReport Specific Configs
             confluent.metrics.reporter.topic.partitions: 12
             confluent.metrics.reporter.topic.replicas: 3
             confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs. 

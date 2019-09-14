@@ -4,7 +4,19 @@ all:
       confluent:
          support:
             metrics_enabled: false
-         repo_versions: 5.3
+            customer_id: ""
+         repo_version: 5.3
+         package_version: 5.3.1-1 #5.3.0-1
+      install_java: true #Disable if you wish to get Java from elsewhere
+      jolokia_enabled: false #Disables Jolokia download/install
+      jolokia_jar_path: /opt/jolokia/jolokia.jar #Needed regardless of Jolokia being enabled
+      kerberos: #Even though we aren't using Kerberos. We currently have to define this.
+         keytab_dir: /etc/security/keytabs
+      open_file_limit: 100000 #Sets file limits for everything
+      zookeeper:
+         properties:
+            clientPort: 2181
+         
 preflight:
    hosts:
       zk[1:3].confluent.nerdynick.net:
@@ -14,152 +26,154 @@ preflight:
       sr1.confluent.nerdynick.net:
       ksql1.confluent.nerdynick.net:
       rest1.confluent.nerdynick.net:
+      
 zookeeper:
    hosts:
       zk[1:3].confluent.nerdynick.net:
    vars:
-      confluent:
-         package_name: 
-         - confluent-kafka-2.12
-         - confluent-common
-broker:
+      zookeeper_jolokia_port: 7770
+         
+kafka_broker:
    hosts:
       kfk1.confluent.nerdynick.net:
-         kafka:
-            broker:
-               id: 1
+         broker_id: 1
       kfk2.confluent.nerdynick.net:
-         kafka:
-            broker:
-               id: 2
+         broker_id: 2
       kfk3.confluent.nerdynick.net:
-         kafka:
-            broker:
-               id: 3
+         broker_id: 3
    vars:
-      confluent:
-         package_name: 
-         - confluent-kafka-2.12
-         - confluent-rebalancer
-         - confluent-common
-      kafka:
-         broker:
-            config:
-               listeners: "PLAINTEXT://:9092,SSL://:9093"
-               num.partitions: 3
-               default.replication.factor: 3
-               ssl.client.auth: none
-               security.inter.broker.protocol: SSL
-               ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
-               ssl.truststore.password:  !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-               ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
-               ssl.keystore.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-               ssl.key.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-               confluent.metrics.reporter.security.protocol: SSL
-               confluent.metrics.reporter.bootstrap.servers: "{{inventory_hostname}}:9093"
-               confluent.metrics.reporter.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
-               confluent.metrics.reporter.ssl.truststore.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-               confluent.metrics.reporter.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
-               confluent.metrics.reporter.ssl.keystore.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-               confluent.metrics.reporter.ssl.key.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-control-center:
+      kafka_broker_jolokia_port: 7771 #Needed regardless of Jolokia being enabled
+      kafka_port: 9092 #This needs to be defined regarles of properties below
+      kafka_broker:
+         properties:
+            num.partitions: 3
+            min.insync.replicas: 2
+            log.retention.hours: 3 #Adjust to desired value. Set low for test envs.
+            default.replication.factor: 3
+            #SSL Specific Configs
+            listeners: "PLAINTEXT://:9092,SSL://:9093"
+            ssl.client.auth: none
+            security.inter.broker.protocol: SSL
+            ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            ssl.truststore.password:  !vault | 
+                                   $ANSIBLE_VAULT;1.1;AES256
+                                   61383466656534366132336638623938666130313533343962336634663233326262353166356432
+                                   3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+                                   32326166656533343436656164353062363438333635646261326162653563336136386634643666
+                                   3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+                                   3838
+            ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            ssl.keystore.password: !vault | 
+                                   $ANSIBLE_VAULT;1.1;AES256
+                                   61383466656534366132336638623938666130313533343962336634663233326262353166356432
+                                   3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+                                   32326166656533343436656164353062363438333635646261326162653563336136386634643666
+                                   3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+                                   3838
+            ssl.key.password: !vault | 
+                                   $ANSIBLE_VAULT;1.1;AES256
+                                   61383466656534366132336638623938666130313533343962336634663233326262353166356432
+                                   3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+                                   32326166656533343436656164353062363438333635646261326162653563336136386634643666
+                                   3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+                                   3838
+            #MetricsReport Specific Configs
+            confluent.metrics.reporter.topic.partitions: 12
+            confluent.metrics.reporter.topic.replicas: 3
+            confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs.
+            confluent.metrics.reporter.security.protocol: SSL
+            confluent.metrics.reporter.bootstrap.servers: "{{inventory_hostname}}:9093"
+            confluent.metrics.reporter.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            confluent.metrics.reporter.ssl.truststore.password: !vault | 
+                                   $ANSIBLE_VAULT;1.1;AES256
+                                   61383466656534366132336638623938666130313533343962336634663233326262353166356432
+                                   3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+                                   32326166656533343436656164353062363438333635646261326162653563336136386634643666
+                                   3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+                                   3838 
+            
+control_center:
    hosts:
       ccc1.confluent.nerdynick.net:
    vars:
-      confluent:
-         package_name: 
-         - confluent-control-center
-         - confluent-common
-         control:
-            center:
-               config:
-                  bootstrap.servers: "{% for host in groups['broker'] %}{% if loop.index > 1%},{% endif %}{{ host }}:9093{% endfor %}"
-                  confluent.controlcenter.streams.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
-                  confluent.controlcenter.streams.ssl.truststore.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-                  confluent.controlcenter.streams.security.protocol: SSL
-                  confluent.controlcenter.rest.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
-                  confluent.controlcenter.rest.ssl.keystore.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-                  confluent.controlcenter.rest.ssl.key.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-                  confluent.controlcenter.rest.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
-                  confluent.controlcenter.rest.ssl.truststore.password: !vault | 
-                                      $ANSIBLE_VAULT;1.1;AES256
-                                      61383466656534366132336638623938666130313533343962336634663233326262353166356432
-                                      3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-                                      32326166656533343436656164353062363438333635646261326162653563336136386634643666
-                                      3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-                                      3838
-                  confluent.controlcenter.rest.listeners: https://0.0.0.0:9021
-                  confluent.controlcenter.connect.default.cluster: "{% for host in groups['connect-distributed'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8083{% endfor %}"
-
-connect-distributed:
-  hosts:
-    con1.confluent.nerdynick.net:
-  vars:
-      confluent:
-         package_name: 
-         - confluent-common
-         - confluent-kafka-2.12
-         - confluent-kafka-connect-replicator
+      kafka_port: 9093
+      control_center:
+         properties:
+            #REST Interface specific Configs
+            confluent.controlcenter.rest.listeners: https://0.0.0.0:9021
+            confluent.controlcenter.rest.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            confluent.controlcenter.rest.ssl.keystore.password: !vault | 
+                                $ANSIBLE_VAULT;1.1;AES256
+                                61383466656534366132336638623938666130313533343962336634663233326262353166356432
+                                3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+                                32326166656533343436656164353062363438333635646261326162653563336136386634643666
+                                3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+                                3838
+            confluent.controlcenter.rest.ssl.key.password: !vault | 
+                                $ANSIBLE_VAULT;1.1;AES256
+                                61383466656534366132336638623938666130313533343962336634663233326262353166356432
+                                3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+                                32326166656533343436656164353062363438333635646261326162653563336136386634643666
+                                3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+                                3838
+            confluent.controlcenter.rest.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            confluent.controlcenter.rest.ssl.truststore.password: !vault | 
+                                $ANSIBLE_VAULT;1.1;AES256
+                                61383466656534366132336638623938666130313533343962336634663233326262353166356432
+                                3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+                                32326166656533343436656164353062363438333635646261326162653563336136386634643666
+                                3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+                                3838
+            #Broker Specific Configs
+            confluent.controlcenter.streams.security.protocol: SSL
+            confluent.controlcenter.streams.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            confluent.controlcenter.streams.ssl.truststore.password: !vault | 
+                                $ANSIBLE_VAULT;1.1;AES256
+                                61383466656534366132336638623938666130313533343962336634663233326262353166356432
+                                3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+                                32326166656533343436656164353062363438333635646261326162653563336136386634643666
+                                3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+                                3838
+            #KSQL Specific Configs
+            confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers
+            #Schema Registry Specific Configs
+            confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
+            #Kafka Connect Related Properties
+            confluent.controlcenter.connect.default.cluster: "{% for host in groups['kafka_connect'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8083{% endfor %}"
+                  
+kafka_connect:
+   hosts:
+      con1.confluent.nerdynick.net:
+   vars:
+      kafka_connect_jolokia_port: 7773 #Needed regardless of Jolokia being enabled
+      kafka_port: 9092
       kafka:
          connect:
             distributed:
                config:
-                  bootstrap.servers: "{% for host in groups['broker'] %}{% if loop.index > 1%},{% endif %}{{ host }}:9092{% endfor %}"
+                  bootstrap.servers: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}{{ host }}:9092{% endfor %}"
                   key.converter: org.apache.kafka.connect.json.JsonConverter
                   value.converter: org.apache.kafka.connect.json.JsonConverter
                   
-     
+schema_registry:
+   hosts:
+      sr1.confluent.nerdynick.net:
+   vars:
+      schema_registry_jolokia_port: 7772
+      kafka_port: 9092
+      schema_registry_listener_port: 8081 #Optional
+      
+ksql:
+   hosts:
+      ksql1.confluent.nerdynick.net:
+   vars:
+      ksql_jolokia_port: 7774 #Needed regardless of Jolokia being enabled
+      kafka_port: 9092
+      ksql_listener_port: 8088 #Optional
+      
+kafka_rest:
+   hosts:
+      rest1.confluent.nerdynick.net:
+   vars:
+      kafka_rest_jolokia_port: 7775 #Needed regardless of Jolokia being enabled
+      kafka_port: 9092
