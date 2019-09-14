@@ -73,13 +73,6 @@ kafka_connect:
    vars:
       kafka_connect_jolokia_port: 7773 #Needed regardless of Jolokia being enabled
       kafka_port: 9092
-      kafka:
-         connect:
-            distributed:
-               config:
-                  bootstrap.servers: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}{{ host }}:9092{% endfor %}"
-                  key.converter: org.apache.kafka.connect.json.JsonConverter
-                  value.converter: org.apache.kafka.connect.json.JsonConverter
                   
 schema_registry:
    hosts:
