@@ -1,6 +1,7 @@
 - name: Schema Registry Provisioning
   hosts: preflight
   tags: preflight
+  become: yes
   pre_tasks:
 #Copy SSL JKS Keystores to resptive hosts
 #Have to do this ourselfs vs using a role. So we only upload the needed JKS files to the resptive hosts.
@@ -47,7 +48,7 @@
     become: yes
     
 - name: Kafka Connect Provisioning
-  hosts: kafka_connect
+  hosts: kafka_connect_ssl
   tags: kafka_connect
   tasks:
   - import_role:
@@ -55,7 +56,7 @@
     become: yes
 
 - name: Schema Registry Provisioning
-  hosts: schema_registry
+  hosts: schema_registry_ssl
   tags:
     - schema_registry
   tasks:
@@ -64,7 +65,7 @@
     become: yes
       
 - name: KSQL Provisioning
-  hosts: ksql
+  hosts: ksql_ssl
   tags:
     - ksql
   tasks:
