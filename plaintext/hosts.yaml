@@ -64,8 +64,6 @@ control_center:
          properties:
             confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers
             confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
-            #Kafka Connect Related Properties
-            confluent.controlcenter.connect.default.cluster: "{% for host in groups['kafka_connect'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8083{% endfor %}"
                   
 kafka_connect:
    hosts:
@@ -73,6 +71,9 @@ kafka_connect:
    vars:
       kafka_connect_jolokia_port: 7773 #Needed regardless of Jolokia being enabled
       kafka_port: 9092
+      kafka_connect:
+         properties:
+            rest.advertised.host.name: "{{inventory_hostname}}"
                   
 schema_registry:
    hosts:
