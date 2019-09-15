@@ -1,0 +1,282 @@
+all:
+   vars:
+      all_ssl_password:   !vault | 
+         $ANSIBLE_VAULT;1.1;AES256
+         61383466656534366132336638623938666130313533343962336634663233326262353166356432
+         3365386339343363663166333563366634363466336531360a393466636362386238353564343939
+         32326166656533343436656164353062363438333635646261326162653563336136386634643666
+         3239616565633431320a663236336638306262613866646231666238376138663230306537666337
+         3838
+      security_mode: plaintext
+      confluent:
+         support:
+            metrics_enabled: false
+            customer_id: ""
+         repo_version: 5.3
+         package_version: 5.3.1-1 #5.3.0-1
+      install_java: true #Disable if you wish to get Java from elsewhere
+      jolokia_enabled: false #Disables Jolokia download/install
+      jolokia_jar_path: /opt/jolokia/jolokia.jar #Needed regardless of Jolokia being enabled
+      kerberos: #Even though we aren't using Kerberos. We currently have to define this.
+         keytab_dir: /etc/security/keytabs
+      open_file_limit: 100000 #Sets file limits for everything
+      zookeeper:
+         properties:
+            clientPort: 2181
+         
+preflight:
+   hosts:
+      zk[1:3].confluent.nerdynick.net:
+      kfk[1:3].confluent.nerdynick.net:
+      ccc1.confluent.nerdynick.net:
+      con1.confluent.nerdynick.net:
+      sr1.confluent.nerdynick.net:
+      ksql1.confluent.nerdynick.net:
+      rest1.confluent.nerdynick.net:
+      
+zookeeper:
+   hosts:
+      zk[1:3].confluent.nerdynick.net:
+   vars:
+      zookeeper_jolokia_port: 7770
+         
+kafka_broker:
+   hosts:
+      kfk1.confluent.nerdynick.net:
+         broker_id: 1
+      kfk2.confluent.nerdynick.net:
+         broker_id: 2
+      kfk3.confluent.nerdynick.net:
+         broker_id: 3
+   vars:
+      kafka_broker_jolokia_port: 7771 #Needed regardless of Jolokia being enabled
+      kafka_port: 9092 #This needs to be defined regarles of properties below
+      kafka_broker:
+         properties:
+            num.partitions: 3
+            min.insync.replicas: 2
+            log.retention.hours: 3 #Adjust to desired value. Set low for test envs.
+            default.replication.factor: 3
+            listeners: "PLAINTEXT://:9092,SSL://:9093"
+            #SSL Specific Configs
+            ssl.client.auth: required #Forces all clients to auth via SSL/TLS trust
+            security.inter.broker.protocol: SSL
+            ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            ssl.truststore.password: "{{all_ssl_password}}"
+            ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            ssl.keystore.password: "{{all_ssl_password}}"
+            ssl.key.password: "{{all_ssl_password}}"
+            #MetricsReport Specific Configs
+            confluent.metrics.reporter.topic.partitions: 12
+            confluent.metrics.reporter.topic.replicas: 3
+            confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs.
+            confluent.metrics.reporter.security.protocol: SSL
+            confluent.metrics.reporter.bootstrap.servers: "{{inventory_hostname}}:9093"
+            confluent.metrics.reporter.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            confluent.metrics.reporter.ssl.truststore.password: "{{all_ssl_password}}"
+            confluent.metrics.reporter.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            confluent.metrics.reporter.ssl.keystore.password: "{{all_ssl_password}}"
+            confluent.metrics.reporter.ssl.key.password: "{{all_ssl_password}}"
+            
+control_center:
+   hosts:
+      ccc1.confluent.nerdynick.net:
+   vars:
+      kafka_port: 9093
+      control_center:
+         properties:
+            #REST Interface Specific Configs
+            confluent.controlcenter.rest.listeners: https://0.0.0.0:9021
+            #REST SSL specific configs
+            confluent.controlcenter.rest.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            confluent.controlcenter.rest.ssl.keystore.password: "{{all_ssl_password}}"
+            confluent.controlcenter.rest.ssl.key.password: "{{all_ssl_password}}"
+            confluent.controlcenter.rest.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            confluent.controlcenter.rest.ssl.truststore.password: "{{all_ssl_password}}"
+            #Broker Specific Configs
+            confluent.controlcenter.streams.security.protocol: SSL
+            confluent.controlcenter.streams.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            confluent.controlcenter.streams.ssl.truststore.password: "{{all_ssl_password}}"
+            confluent.controlcenter.streams.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            confluent.controlcenter.streams.ssl.keystore.password: "{{all_ssl_password}}"
+            confluent.controlcenter.streams.ssl.key.password: "{{all_ssl_password}}"
+            #KSQL Specific Configs
+            confluent.controlcenter.ksql.enable: 'true' #Set this to false so we can use HTTPS
+            confluent.controlcenter.ksql.url: "https://{{ groups['ksql_ssl'][0] }}:8088"
+            confluent.controlcenter.ksql.advertised.url: "https://{{ groups['ksql_ssl'][0] }}:8088"
+            #Schema Registry Specific Configs
+            confluent.controlcenter.schema.registry.enable: 'true' #Set this to false so we can use HTTPS
+            confluent.controlcenter.schema.registry.url: "{% for host in groups['schema_registry_ssl'] %}{% if loop.index > 1%},{% endif %}https://{{ host }}:8081{% endfor %}"
+            #Kafka Connect Related Properties
+            #We need to define the cluster here to switch to HTTPS. Ontop of renaming the host group
+            confluent.controlcenter.connect.default.cluster: "{% for host in groups['kafka_connect_ssl'] %}{% if loop.index > 1%},{% endif %}https://{{ host }}:8083{% endfor %}"
+                  
+kafka_connect_ssl: #Have to rename the group to do issues in the ControlCenter role
+   hosts:
+      con1.confluent.nerdynick.net:
+   vars:
+      kafka_connect_jolokia_port: 7773 #Needed regardless of Jolokia being enabled
+      kafka_port: 9093
+      kafka_connect:
+         properties:
+            listeners: https://0.0.0.0:8083
+            #REST SSL Specific Configs
+            rest.advertised.listener: HTTPS
+            rest.advertised.host.name: "{{inventory_hostname}}"
+            listeners.https.ssl.client.auth: 'false' #Set to true if you wish to force Client SSL Authentication
+            listeners.https.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            listeners.https.ssl.truststore.password: "{{all_ssl_password}}"
+            listeners.https.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            listeners.https.ssl.keystore.password: "{{all_ssl_password}}"
+            listeners.https.ssl.key.password: "{{all_ssl_password}}"
+            #Broker Specific Configs
+            #NOTE: If the above are not provided these will be used for HTTPS
+            security.protocol: SSL
+            ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            ssl.truststore.password: "{{all_ssl_password}}"
+            ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            ssl.keystore.password: "{{all_ssl_password}}"
+            ssl.key.password: "{{all_ssl_password}}"
+            #Schema Registry related configs
+            value.converter.schema.registry.url: "{% for host in groups['schema_registry_ssl'] %}{% if loop.index > 1%},{% endif %}https://{{ host }}:8081{% endfor %}"
+            key.converter.schema.registry.url: "{% for host in groups['schema_registry_ssl'] %}{% if loop.index > 1%},{% endif %}https://{{ host }}:8081{% endfor %}"
+            #Default Producer Configuration
+            producer.security.protocol: SSL
+            producer.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            producer.ssl.truststore.password: "{{all_ssl_password}}"
+            producer.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            producer.ssl.keystore.password: "{{all_ssl_password}}"
+            producer.ssl.key.password: "{{all_ssl_password}}"
+            #Default Producer Metrics Interceptor Configs
+            producer.confluent.monitoring.interceptor.security.protocol: SSL
+            producer.confluent.monitoring.interceptor.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            producer.confluent.monitoring.interceptor.ssl.truststore.password: "{{all_ssl_password}}"
+            producer.confluent.monitoring.interceptor.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            producer.confluent.monitoring.interceptor.ssl.keystore.password: "{{all_ssl_password}}"
+            producer.confluent.monitoring.interceptor.ssl.key.password: "{{all_ssl_password}}"
+            #Default Consumer Configuration
+            consumer.security.protocol: SSL
+            consumer.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            consumer.ssl.truststore.password: "{{all_ssl_password}}"
+            consumer.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            consumer.ssl.keystore.password: "{{all_ssl_password}}"
+            consumer.ssl.key.password: "{{all_ssl_password}}"
+            #Default Consumer Metrics Interceptor Configs
+            consumer.confluent.monitoring.interceptor.security.protocol: SSL
+            consumer.confluent.monitoring.interceptor.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            consumer.confluent.monitoring.interceptor.ssl.truststore.password: "{{all_ssl_password}}"
+            consumer.confluent.monitoring.interceptor.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            consumer.confluent.monitoring.interceptor.ssl.keystore.password: "{{all_ssl_password}}"
+            consumer.confluent.monitoring.interceptor.ssl.key.password: "{{all_ssl_password}}"
+                  
+schema_registry_ssl:
+   hosts:
+      sr1.confluent.nerdynick.net:
+   vars:
+      schema_registry_jolokia_port: 7772
+      kafka_port: 9093
+      schema_registry_listener_port: 8081 #Optional
+      schema_registry:
+         properties:
+            listeners: https://0.0.0.0:8081
+            host.name: "{{inventory_hostname}}"
+            #SSL Specific Configs
+            ssl.client.auth: 'false' #Set to true if you wish to force Client SSL Authentication
+            inter.instance.protocol: https
+            security.protocol: SSL
+            ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            ssl.truststore.password: "{{all_ssl_password}}"
+            ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            ssl.keystore.password: "{{all_ssl_password}}"
+            ssl.key.password: "{{all_ssl_password}}"
+            #Broker Specific Configs
+            kafkastore.security.protocol: SSL
+            kafkastore.bootstrap.servers: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}SSL://{{ host }}:{{kafka_port}}{% endfor %}"
+            kafkastore.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            kafkastore.ssl.truststore.password: "{{all_ssl_password}}"
+            kafkastore.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            kafkastore.ssl.keystore.password: "{{all_ssl_password}}"
+            kafkastore.ssl.key.password: "{{all_ssl_password}}"
+      
+ksql_ssl:
+   hosts:
+      ksql1.confluent.nerdynick.net:
+   vars:
+      ksql_jolokia_port: 7774 #Needed regardless of Jolokia being enabled
+      kafka_port: 9093
+      ksql_listener_port: 8088 #Optional
+      streamsDataDir: /var/lib/kafka-streams
+      ksql:
+         properties:
+            listeners: https://0.0.0.0:8088
+            #REST SSL Secific Configs
+            ssl.client.auth: 'false' #Set to true if you wish to force Client SSL Authentication
+            ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            ssl.truststore.password: "{{all_ssl_password}}"
+            ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            ssl.keystore.password: "{{all_ssl_password}}"
+            ssl.key.password: "{{all_ssl_password}}"
+            #Broker Specific Configs
+            ksql.streams.security.protocol: SSL
+            ksql.streams.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            ksql.streams.ssl.truststore.password: "{{all_ssl_password}}"
+            ksql.streams.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            ksql.streams.ssl.keystore.password: "{{all_ssl_password}}"
+            ksql.streams.ssl.key.password: "{{all_ssl_password}}"
+            ksql.internal.topic.replicas: 3
+            ksql.streams.replication.factor: 3
+            ksql.streams.state.dir: "{{streamsDataDir}}"
+            ksql.streams.num.standby.replicas: 1
+            #Schema Registry Specific Configs
+            ksql.schema.registry.url: "{% for host in groups['schema_registry_ssl'] %}{% if loop.index > 1%},{% endif %}https://{{ host }}:8081{% endfor %}"
+            ksql.schema.registry.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            ksql.schema.registry.ssl.truststore.password: "{{all_ssl_password}}"
+            ksql.schema.registry.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            ksql.schema.registry.ssl.keystore.password: "{{all_ssl_password}}"
+            ksql.schema.registry.ssl.key.password: "{{all_ssl_password}}"
+            #Producer Specific Configs
+            producer.interceptor.classes: io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor
+            ksql.streams.producer.delivery.timeout.ms: 2147483647
+            ksql.streams.producer.max.block.ms: 9223372036854775807
+            #Consumer Specific Configs
+            consumer.interceptor.classes: io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor
+            #Metrics Interceptor Configs
+            confluent.monitoring.interceptor.security.protocol: SSL
+            confluent.monitoring.interceptor.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            confluent.monitoring.interceptor.ssl.truststore.password: "{{all_ssl_password}}"
+            confluent.monitoring.interceptor.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            confluent.monitoring.interceptor.ssl.keystore.password: "{{all_ssl_password}}"
+            confluent.monitoring.interceptor.ssl.key.password: "{{all_ssl_password}}"
+      
+kafka_rest:
+   hosts:
+      rest1.confluent.nerdynick.net:
+   vars:
+      kafka_rest_jolokia_port: 7775 #Needed regardless of Jolokia being enabled
+      kafka_port: 9093
+      kafka_rest:
+         properties:
+            listeners: https://0.0.0.0:8082
+            host.name: "{{inventory_hostname}}"
+            #REST SSL Specific Configs
+            ssl.client.auth: 'false' #Set to true if you wish to force Client SSL Authentication
+            ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            ssl.truststore.password: "{{all_ssl_password}}"
+            ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            ssl.keystore.password: "{{all_ssl_password}}"
+            ssl.key.password: "{{all_ssl_password}}"
+            #Broker Specific Configs
+            client.security.protocol: SSL
+            client.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            client.ssl.truststore.password: "{{all_ssl_password}}"
+            client.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            client.ssl.keystore.password: "{{all_ssl_password}}"
+            client.ssl.key.password:  "{{all_ssl_password}}"
+            #Schema Registry Specific Configs
+            schema.registry.url: "{% for host in groups['schema_registry_ssl'] %}{% if loop.index > 1%},{% endif %}https://{{ host }}:8081{% endfor %}"
+            schema.registry.ssl.truststore.location: /var/ssl/private/{{inventory_hostname}}.truststore.jks
+            schema.registry.ssl.truststore.password: "{{all_ssl_password}}"
+            schema.registry.ssl.keystore.location: /var/ssl/private/{{inventory_hostname}}.keystore.jks
+            schema.registry.ssl.keystore.password: "{{all_ssl_password}}"
+            schema.registry.ssl.key.password: "{{all_ssl_password}}"
+            
