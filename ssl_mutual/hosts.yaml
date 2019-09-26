@@ -83,6 +83,13 @@ control_center:
       ccc1.confluent.nerdynick.net:
    vars:
       kafka_port: 9093
+      control_center_service_environment:
+         #Keystores are added here to support SSL/TLS REST calls to SR
+         CONTROL_CENTER_OPTS: >-
+            -Djavax.net.ssl.keyStore=/var/ssl/private/{{inventory_hostname}}.keystore.jks 
+            -Djavax.net.ssl.trustStore=/var/ssl/private/{{inventory_hostname}}.truststore.jks 
+            -Djavax.net.ssl.keyStorePassword={{all_ssl_password}} 
+            -Djavax.net.ssl.trustStorePassword={{all_ssl_password}}
       control_center:
          properties:
             #REST Interface Specific Configs
@@ -117,6 +124,13 @@ kafka_connect_ssl: #Have to rename the group to do issues in the ControlCenter r
    vars:
       kafka_connect_jolokia_port: 7773 #Needed regardless of Jolokia being enabled
       kafka_port: 9093
+      kafka_connect_service_environment_overrides:
+         #Keystores are added here to support SSL/TLS REST calls to SR
+         KAFKA_OPTS: >-
+            -Djavax.net.ssl.keyStore=/var/ssl/private/{{inventory_hostname}}.keystore.jks 
+            -Djavax.net.ssl.trustStore=/var/ssl/private/{{inventory_hostname}}.truststore.jks 
+            -Djavax.net.ssl.keyStorePassword={{all_ssl_password}} 
+            -Djavax.net.ssl.trustStorePassword={{all_ssl_password}}
       kafka_connect:
          properties:
             listeners: https://0.0.0.0:8083
@@ -206,6 +220,13 @@ ksql_ssl:
       kafka_port: 9093
       ksql_listener_port: 8088 #Optional
       streamsDataDir: /var/lib/kafka-streams
+      ksql_service_environment_overrides:
+         #Keystores are added here to support SSL/TLS REST calls to SR
+         KAFKA_OPTS: >-
+            -Djavax.net.ssl.keyStore=/var/ssl/private/{{inventory_hostname}}.keystore.jks 
+            -Djavax.net.ssl.trustStore=/var/ssl/private/{{inventory_hostname}}.truststore.jks 
+            -Djavax.net.ssl.keyStorePassword={{all_ssl_password}} 
+            -Djavax.net.ssl.trustStorePassword={{all_ssl_password}}
       ksql:
          properties:
             listeners: https://0.0.0.0:8088
@@ -254,6 +275,13 @@ kafka_rest:
    vars:
       kafka_rest_jolokia_port: 7775 #Needed regardless of Jolokia being enabled
       kafka_port: 9093
+      kafka_rest_service_environment_overrides:
+         #Keystores are added here to support SSL/TLS REST calls to SR
+         KAFKAREST_OPTS: >-
+            -Djavax.net.ssl.keyStore=/var/ssl/private/{{inventory_hostname}}.keystore.jks 
+            -Djavax.net.ssl.trustStore=/var/ssl/private/{{inventory_hostname}}.truststore.jks 
+            -Djavax.net.ssl.keyStorePassword={{all_ssl_password}} 
+            -Djavax.net.ssl.trustStorePassword={{all_ssl_password}}
       kafka_rest:
          properties:
             listeners: https://0.0.0.0:8082

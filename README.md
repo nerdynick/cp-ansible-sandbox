@@ -24,3 +24,12 @@ The goal is to capture a number of the common setups, how to do it in Ansible, a
 |:-------------------------------------------------------------------------:|:------------------------------------------------------------|
 |   [confluentinc/cp-ansible](https://github.com/confluentinc/cp-ansible)   |Confluent Provided Ansible Roles                             |
 |[nerdynick/keystore-scripts](https://github.com/nerdynick/keystore-scripts)|Collection of simple BASH scripts for generating JKS Keystore|
+
+## Roadmap
+
+1. Add examples, in this order
+ 1. SASL_SSL + SCRAM
+ 2. SASL_SSL + SCRAM & OAUTHBEARER/RBAC
+ 3. SASL_SSL + GSSAPI
+ 4. SASL_SSL + GSAPI & OAUTHBEARER/RBAC
+2. Example Operations Scripts
