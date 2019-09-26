@@ -1,0 +1,67 @@
+- name: Zookeeper Stop
+  hosts: zookeeper
+  become: yes
+  gather_facts: no
+  tags: zookeeper
+  tasks:
+  - name: Stop Zookeeper
+    systemd:
+      name: "confluent-zookeeper"
+      state: stopped
+    ignore_errors: yes
+
+- name: Kafka Stop
+  hosts: kafka_broker
+  become: yes
+  gather_facts: no
+  tags: kafka_broker
+  tasks:
+  - name: Stop Kafka
+    systemd:
+      name: "confluent-kafka"
+      state: stopped
+    ignore_errors: yes
+      
+- name: Zookeeper Clear data
+  hosts: zookeeper
+  become: yes
+  gather_facts: no
+  tags: zookeeper
+  tasks:
+  - name: Clear Zookeeper
+    file:
+       state: absent
+       path: "/var/lib/zookeeper/zookeeper-2"
+
+- name: Kafka Clear data
+  hosts: kafka_broker
+  become: yes
+  gather_facts: no
+  tags: kafka_broker
+  tasks:
+  - name: Clear Kafka
+    file:
+       state: absent
+       path: "/var/lib/kafka/data/*"
+      
+- name: Zookeeper Start
+  hosts: zookeeper
+  become: yes
+  gather_facts: no
+  tags: zookeeper
+  tasks:
+  - name: Start Zookeeper
+    systemd:
+      name: "confluent-zookeeper"
+      state: started
+
+- name: Kafka Start
+  hosts: kafka_broker
+  become: yes
+  gather_facts: no
+  tags: kafka_broker
+  tasks:
+  - name: Start Kafka
+    systemd:
+      name: "confluent-kafka"
+      state: started

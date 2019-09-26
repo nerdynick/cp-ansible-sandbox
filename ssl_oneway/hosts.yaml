@@ -1,12 +1,6 @@
 all:
    vars:
-      all_ssl_password:   !vault | 
-         $ANSIBLE_VAULT;1.1;AES256
-         61383466656534366132336638623938666130313533343962336634663233326262353166356432
-         3365386339343363663166333563366634363466336531360a393466636362386238353564343939
-         32326166656533343436656164353062363438333635646261326162653563336136386634643666
-         3239616565633431320a663236336638306262613866646231666238376138663230306537666337
-         3838
+      all_ssl_password: "{{vault_ssl_password}}"
       security_mode: plaintext
       confluent:
          support:
@@ -80,7 +74,7 @@ control_center:
       ccc1.confluent.nerdynick.net:
    vars:
       kafka_port: 9093
-      control_center_service_environment:
+      control_center_service_environment_overrides:
          #Keystores are added here to support SSL/TLS REST calls to SR
          CONTROL_CENTER_OPTS: >-
             -Djavax.net.ssl.keyStore=/var/ssl/private/{{inventory_hostname}}.keystore.jks 
