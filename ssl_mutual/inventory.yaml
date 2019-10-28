@@ -20,27 +20,27 @@ all:
          
 preflight:
    hosts:
-      zk[1:3].confluent.nerdynick.net:
-      kfk[1:3].confluent.nerdynick.net:
-      ccc1.confluent.nerdynick.net:
-      con1.confluent.nerdynick.net:
-      sr1.confluent.nerdynick.net:
-      ksql1.confluent.nerdynick.net:
-      rest1.confluent.nerdynick.net:
+      zk[1:3].example.com:
+      kfk[1:3].example.com:
+      ccc1.example.com:
+      con1.example.com:
+      sr1.example.com:
+      ksql1.example.com:
+      rest1.example.com:
       
 zookeeper:
    hosts:
-      zk[1:3].confluent.nerdynick.net:
+      zk[1:3].example.com:
    vars:
       zookeeper_jolokia_port: 7770
          
 kafka_broker:
    hosts:
-      kfk1.confluent.nerdynick.net:
+      kfk1.example.com:
          broker_id: 1
-      kfk2.confluent.nerdynick.net:
+      kfk2.example.com:
          broker_id: 2
-      kfk3.confluent.nerdynick.net:
+      kfk3.example.com:
          broker_id: 3
    vars:
       kafka_broker_jolokia_port: 7771 #Needed regardless of Jolokia being enabled
@@ -74,7 +74,7 @@ kafka_broker:
             
 control_center:
    hosts:
-      ccc1.confluent.nerdynick.net:
+      ccc1.example.com:
    vars:
       kafka_port: 9093
       control_center_service_environment_overrides:
@@ -114,7 +114,7 @@ control_center:
                   
 kafka_connect_ssl: #Have to rename the group to do issues in the ControlCenter role
    hosts:
-      con1.confluent.nerdynick.net:
+      con1.example.com:
    vars:
       kafka_connect_jolokia_port: 7773 #Needed regardless of Jolokia being enabled
       kafka_port: 9093
@@ -179,7 +179,7 @@ kafka_connect_ssl: #Have to rename the group to do issues in the ControlCenter r
                   
 schema_registry_ssl:
    hosts:
-      sr1.confluent.nerdynick.net:
+      sr1.example.com:
    vars:
       schema_registry_jolokia_port: 7772
       kafka_port: 9093
@@ -208,7 +208,7 @@ schema_registry_ssl:
       
 ksql_ssl:
    hosts:
-      ksql1.confluent.nerdynick.net:
+      ksql1.example.com:
    vars:
       ksql_jolokia_port: 7774 #Needed regardless of Jolokia being enabled
       kafka_port: 9093
@@ -265,7 +265,7 @@ ksql_ssl:
       
 kafka_rest:
    hosts:
-      rest1.confluent.nerdynick.net:
+      rest1.example.com:
    vars:
       kafka_rest_jolokia_port: 7775 #Needed regardless of Jolokia being enabled
       kafka_port: 9093

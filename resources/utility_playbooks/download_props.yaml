@@ -1,0 +1,160 @@
+- name: Zookeeper Fetch
+  hosts: zookeeper
+  become: yes
+  tags: zookeeper
+  vars: 
+     fetch_files:
+     - zookeeper.properties
+  tasks:
+  - name: Fetch properties
+    fetch:
+      dest: "props/{{inventory_hostname_short}}/"
+      flat: yes
+      src: "/etc/kafka/{{item}}"
+    with_items: "{{fetch_files}}"
+  - name: Local Replace #Clean up URLs to be *.example.com and taking care of JKS files 
+    become: false
+    local_action:
+       module: replace
+       path: "{{playbook_dir}}/props/{{inventory_hostname_short}}/{{item}}"
+       regexp: '([a-z]+[0-9]+)(\.[a-zA-Z0-9]{3,}(?<!.jks))+'
+       replace: '\1.example.com\2'
+    with_items: "{{fetch_files}}"
+      
+- name: Kafka Fetch
+  hosts: kafka_broker
+  become: yes
+  tags: kafka_broker
+  vars: 
+     fetch_files:
+     - server.properties
+  tasks:
+  - name: Fetch properties
+    fetch:
+      dest: "props/{{inventory_hostname_short}}/"
+      flat: yes
+      src: "/etc/kafka/{{item}}"
+    with_items: "{{fetch_files}}"
+  - name: Local Replace
+    become: false
+    local_action:
+       module: replace
+       path: "{{playbook_dir}}/props/{{inventory_hostname_short}}/{{item}}"
+       regexp: '([a-z]+[0-9]+)(\.[a-zA-Z0-9]{3,}(?<!.jks))+'
+       replace: '\1.example.com'
+    with_items: "{{fetch_files}}"
+      
+- name: Kafka Connect Fetch
+  hosts: kafka_connect_ssl
+  become: yes
+  tags: kafka_connect
+  vars: 
+     fetch_files:
+     - connect-distributed.properties
+  tasks:
+  - name: Fetch properties
+    fetch:
+      dest: "props/{{inventory_hostname_short}}/"
+      flat: yes
+      src: "/etc/kafka/{{item}}"
+    with_items: "{{fetch_files}}"
+  - name: Local Replace
+    become: false
+    local_action:
+       module: replace
+       path: "{{playbook_dir}}/props/{{inventory_hostname_short}}/{{item}}"
+       regexp: '([a-z]+[0-9]+)(\.[a-zA-Z0-9]{3,}(?<!.jks))+'
+       replace: '\1.example.com'
+    with_items: "{{fetch_files}}"
+      
+- name: C3 Fetch
+  hosts: control_center
+  become: yes
+  tags: control_center
+  vars: 
+     fetch_files:
+     - control-center-production.properties
+  tasks:
+  - name: Fetch properties
+    fetch:
+      dest: "props/{{inventory_hostname_short}}/"
+      flat: yes
+      src: "/etc/confluent-control-center/{{item}}"
+    with_items: "{{fetch_files}}"
+  - name: Local Replace
+    become: false
+    local_action:
+       module: replace
+       path: "{{playbook_dir}}/props/{{inventory_hostname_short}}/{{item}}"
+       regexp: '([a-z]+[0-9]+)(\.[a-zA-Z0-9]{3,}(?<!.jks))+'
+       replace: '\1.example.com'
+    with_items: "{{fetch_files}}"
+      
+- name: Schema Reg Fetch
+  hosts: schema_registry_ssl
+  become: yes
+  tags: schema_registry
+  vars: 
+     fetch_files:
+     - schema-registry.properties
+  tasks:
+  - name: Fetch properties
+    fetch:
+      dest: "props/{{inventory_hostname_short}}/"
+      flat: yes
+      src: "/etc/schema-registry/{{item}}"
+    with_items: "{{fetch_files}}"
+  - name: Local Replace
+    become: false
+    local_action:
+       module: replace
+       path: "{{playbook_dir}}/props/{{inventory_hostname_short}}/{{item}}"
+       regexp: '([a-z]+[0-9]+)(\.[a-zA-Z0-9]{3,}(?<!.jks))+'
+       replace: '\1.example.com'
+    with_items: "{{fetch_files}}"
+      
+- name: KSQL Fetch
+  hosts: ksql_ssl
+  become: yes
+  tags: ksql_ssl
+  vars: 
+     fetch_files:
+     - ksql-server.properties
+  tasks:
+  - name: Fetch properties
+    fetch:
+      dest: "props/{{inventory_hostname_short}}/"
+      flat: yes
+      src: "/etc/ksql/{{item}}"
+    with_items: "{{fetch_files}}"
+  - name: Local Replace
+    become: false
+    local_action:
+       module: replace
+       path: "{{playbook_dir}}/props/{{inventory_hostname_short}}/{{item}}"
+       regexp: '([a-z]+[0-9]+)(\.[a-zA-Z0-9]{3,}(?<!.jks))+'
+       replace: '\1.example.com'
+    with_items: "{{fetch_files}}"
+      
+- name: REST Fetch
+  hosts: kafka_rest
+  become: yes
+  tags: kafka_rest
+  vars: 
+     fetch_files:
+     - kafka-rest.properties
+  tasks:
+  - name: Fetch properties
+    fetch:
+      dest: "props/{{inventory_hostname_short}}/"
+      flat: yes
+      src: "/etc/kafka-rest/{{item}}"
+    with_items: "{{fetch_files}}"
+  - name: Local Replace
+    become: false
+    local_action:
+       module: replace
+       path: "{{playbook_dir}}/props/{{inventory_hostname_short}}/{{item}}"
+       regexp: '([a-z]+[0-9]+)(\.[a-zA-Z0-9]{3,}(?<!.jks))+'
+       replace: '\1.example.com'
+    with_items: "{{fetch_files}}"

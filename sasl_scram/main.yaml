@@ -34,6 +34,24 @@
 - name: Kafka Broker Provisioning
   hosts: kafka_broker
   tags: kafka_broker
+  pre_tasks:
+  - name: Broker JAAS File
+    template:
+       src: jaas.j2
+       dest: "/etc/kafka/kafka_jaas.conf"
+       mode: 0640
+       vars:
+          modules:
+          - name: KafkaServer
+            module: org.apache.kafka.common.security.scram.ScramLoginModule
+            pairs:
+               username: "admin"
+               password: "test"
+          - name: KafkaClient
+            module: org.apache.kafka.common.security.scram.ScramLoginModule
+            pairs:
+               username: "admin"
+               password: "test"
   tasks:
   - import_role:
       name: confluent.kafka_broker
