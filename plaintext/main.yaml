@@ -1,7 +1,9 @@
-- name: Schema Registry Provisioning
-  hosts: preflight
+- name: Host Provisioning
+  hosts: zookeeper:kafka_broker:schema_registry:kafka_connect:ksql:control_center:kafka_rest
   tags: preflight
   tasks:
+  - import_role:
+      name: confluent.variables_handlers
   - import_role:
       name: confluent.common
     become: yes
@@ -27,6 +29,13 @@
   hosts: control_center
   tags: control_center
   tasks:
+#  - name: Create RocksDB Directory
+#    file:
+#      path: "{{control_center_service_environment_overrides.ROCKSDB_SHAREDLIB_DIR}}"
+#      group: "{{control_center.group}}"
+#      owner: "{{control_center.user}}"
+#      mode: '764'
+#      recurse: yes
   - import_role:
       name: confluent.control_center
     become: yes

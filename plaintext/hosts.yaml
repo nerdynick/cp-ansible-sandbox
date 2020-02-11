@@ -1,50 +1,48 @@
 all:
    vars:
-      security_mode: plaintext
+      sasl_protocol: none
+      confluent_repo_version: 5.4 #Optional
+      confluent_package_version: 5.4.0 #Optional
       confluent:
          support:
             metrics_enabled: false
             customer_id: ""
-         repo_version: 5.3
-         package_version: 5.3.1-1 #5.3.0-1
+      install_netcat: false #Defaults to true
       install_java: true #Disable if you wish to get Java from elsewhere
       jolokia_enabled: false #Disables Jolokia download/install
-      jolokia_jar_path: /opt/jolokia/jolokia.jar #Needed regardless of Jolokia being enabled
-      kerberos: #Even though we aren't using Kerberos. We currently have to define this.
-         keytab_dir: /etc/security/keytabs
-      open_file_limit: 100000 #Sets file limits for everything
-      zookeeper:
-         properties:
-            clientPort: 2181
-         
-preflight:
-   hosts:
-      zk[1:3].confluent.nerdynick.net:
-      kfk[1:3].confluent.nerdynick.net:
-      ccc1.confluent.nerdynick.net:
-      con1.confluent.nerdynick.net:
-      sr1.confluent.nerdynick.net:
-      ksql1.confluent.nerdynick.net:
-      rest1.confluent.nerdynick.net:
+      jmxexporter_enabled: false #Enable to install Prometheus
+      kafka_broker_configure_additional_brokers: true #The following 3 sets are needed to provide proper advertisment
+      kafka_broker_inter_broker_listener_name: external
+      kafka_broker_custom_listeners: 
+         external:
+            name: EXTERNAL
+            port: 9092
+            ssl_enabled: false
+            ssl_mutual_auth_enabled: false
+            sasl_protocol: none
+            hostname: "{{inventory_hostname}}"
       
 zookeeper:
    hosts:
-      zk[1:3].confluent.nerdynick.net:
+      zk[1:3].nikoleta.aws.ps.confluent.io:
    vars:
-      zookeeper_jolokia_port: 7770
+      zookeeper_data_dir: /var/lib/zookeeper
+      zookeeper:
+         log_path: /var/log/kafka/
+         properties:
+            '4lw.commands.whitelist': "stat, ruok, srvr, mntr" #Optional, this enables the 4 primary 4 letter words
          
 kafka_broker:
    hosts:
-      kfk1.confluent.nerdynick.net:
-         broker_id: 1
-      kfk2.confluent.nerdynick.net:
-         broker_id: 2
-      kfk3.confluent.nerdynick.net:
-         broker_id: 3
+      kfk1.nikoleta.aws.ps.confluent.io:
+      kfk2.nikoleta.aws.ps.confluent.io:
+      kfk3.nikoleta.aws.ps.confluent.io:
    vars:
-      kafka_broker_jolokia_port: 7771 #Needed regardless of Jolokia being enabled
-      kafka_port: 9092
+      kafka_broker_service_environment_overrides:
+         KAFKA_HEAP_OPTS: "-Xmx1g"
       kafka_broker:
+         datadir:
+            - /var/lib/kafka/data
          properties:
             num.partitions: 3
             min.insync.replicas: 2
@@ -57,35 +55,32 @@ kafka_broker:
             
 control_center:
    hosts:
-      ccc1.confluent.nerdynick.net:
+      ccc1.nikoleta.aws.ps.confluent.io:
    vars:
-      kafka_port: 9092
+      control_center_custom_java_args: " -Djava.io.tmpdir=/tmp"
+      control_center_service_environment_overrides:
+         ROCKSDB_SHAREDLIB_DIR: /tmp #Optional, but this is how to move the ROCKSDB when noexec is on for /tmp
       control_center:
          properties:
-            confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers
-            confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
+            confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
+            confluent.controlcenter.schema.registry.enable: 'false' # Set to false if no Schema Registry
+            confluent.controlcenter.data.dir: /var/lib/confluent/control-center
+            
+schema_registry:
+   hosts:
+      sr1.nikoleta.aws.ps.confluent.io:
                   
 kafka_connect:
    hosts:
-      con1.confluent.nerdynick.net:
+      connect1.nikoleta.aws.ps.confluent.io:
    vars:
-      kafka_connect_jolokia_port: 7773 #Needed regardless of Jolokia being enabled
-      kafka_port: 9092
       kafka_connect:
          properties:
             rest.advertised.host.name: "{{inventory_hostname}}"
-                  
-schema_registry:
-   hosts:
-      sr1.confluent.nerdynick.net:
-   vars:
-      schema_registry_jolokia_port: 7772
-      kafka_port: 9092
-      schema_registry_listener_port: 8081 #Optional
-      
+                      
 ksql:
    hosts:
-      ksql1.confluent.nerdynick.net:
+      ksql1.nikoleta.aws.ps.confluent.io:
    vars:
       ksql_jolokia_port: 7774 #Needed regardless of Jolokia being enabled
       kafka_port: 9092
@@ -93,7 +88,7 @@ ksql:
       
 kafka_rest:
    hosts:
-      rest1.confluent.nerdynick.net:
+      rest1.nikoleta.aws.ps.confluent.io:
    vars:
       kafka_rest_jolokia_port: 7775 #Needed regardless of Jolokia being enabled
       kafka_port: 9092
