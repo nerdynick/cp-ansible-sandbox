@@ -7,3 +7,4 @@
 **/*.srl
 *.keytab
 .DS_Store
+.pydevproject
