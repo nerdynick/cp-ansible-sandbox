@@ -58,6 +58,8 @@ all:
       kafka_rest_ssl_enabled: false
       schema_registry_ssl_enabled: false
       #STOP
+      secrets_filepath: ""
+      secrets_path: "/var/ssl/private/secrets/security.properties"
       
       
 zookeeper:
@@ -99,8 +101,8 @@ kafka_broker:
             ldap.group.search.scope: 2
             ldap.java.naming.provider.url: ldap://ad.bootcamp.confluent.io:389
             ldap.java.naming.security.authentication: simple
-            ldap.java.naming.security.credentials: 
-            ldap.java.naming.security.principal: "CN=Nikoleta KFK1,OU=Nikoleta,OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io"
+            ldap.java.naming.security.credentials: LDAP_SERVICE_ACCOUNT_PASSWORD
+            ldap.java.naming.security.principal: LDAP_SERVICE_ACCOUNT #Example DN "CN=Nikoleta KFK1,OU=Nikoleta,OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io"
             ldap.user.name.attribute: sAMAccountName
             ldap.user.object.class: user
             ldap.user.search.base: OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io
@@ -108,10 +110,10 @@ kafka_broker:
 #            ldap.java.naming.security.protocol: SSL
 #            ldap.ssl.truststore.location: "{{kafka_broker_truststore_path}}"
 #            ldap.ssl.truststore.password: "{{kafka_broker_truststore_storepass}}"
-            super.users: User:admin
+            super.users: User:admin;User:nikoleta-kfk1;User:nikoleta-kfk2
             broker.users: User:admin
-            confluent.metadata.server.advertised.listeners: "https://{{inventory_hostname}}:8090"
-            confluent.metadata.server.listeners: https://0.0.0.0:8090
+            confluent.metadata.server.advertised.listeners: "http://{{inventory_hostname}}:8090,https://{{inventory_hostname}}:8091"
+            confluent.metadata.server.listeners: http://0.0.0.0:8090,https://0.0.0.0:8091
             confluent.metadata.server.authentication.method: BEARER
             confluent.metadata.server.public.key.path: "{{rbac_mds_public_key_path}}"
             confluent.metadata.server.token.key.path: "{{rbac_mds_private_key_path}}"
@@ -123,26 +125,30 @@ kafka_broker:
             confluent.metadata.server.token.max.lifetime.ms: 3600000
             
 control_center:
-   hosts:
-      ccc1.nikoleta.aws.ps.confluent.io:
-   vars:
-      control_center_custom_java_args: " -Djava.io.tmpdir=/tmp"
-      control_center_service_environment_overrides:
-         ROCKSDB_SHAREDLIB_DIR: /tmp
-      control_center:
-         properties:
-            confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
-            confluent.controlcenter.schema.registry.enable: 'false' # Set to false if no Schema Registry
-            confluent.controlcenter.data.dir: /var/lib/confluent/control-center
-            # Enable RBAC authorization in Control Center by providing a comma-separated list of Metadata Service (MDS) URLs
-            confluent.metadata.bootstrap.server.urls: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}https://{{ host }}:8090{% endfor %}"
-            # MDS credentials of an RBAC user for Control Center to act on behalf of
-            # NOTE: This user must be a SystemAdmin on each Apache Kafka cluster
-            confluent.metadata.basic.auth.user.info: "{{sasl_scram_users.control_center.principal}}:{{sasl_scram_users.control_center.password}}"
-            # Enable authentication using a bearer token for Control Center's REST endpoints
-            confluent.controlcenter.rest.authentication.method: BEARER
-            # NOTE: Must match the MDS public key
-            public.key.path: "{{rbac_mds_public_key_path}}"
+  hosts:
+    ccc1.nikoleta.aws.ps.confluent.io:
+  vars:
+    control_center_kafka_listener_name: rbac
+    control_center_custom_java_args: " -Djava.io.tmpdir=/tmp"
+    control_center_service_environment_overrides:
+      ROCKSDB_SHAREDLIB_DIR: /tmp
+    control_center:
+      properties:
+        confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
+        confluent.controlcenter.schema.registry.enable: 'false' # Set to false if no Schema Registry
+        confluent.controlcenter.data.dir: /var/lib/confluent/control-center
+        # Enable RBAC authorization in Control Center by providing a comma-separated list of Metadata Service (MDS) URLs
+        confluent.metadata.bootstrap.server.urls: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8090{% endfor %}"
+        # MDS credentials of an RBAC user for Control Center to act on behalf of
+        # NOTE: This user must be a SystemAdmin on each Apache Kafka cluster
+        confluent.metadata.basic.auth.user.info: "LDAP_SERVICE_ACCOUNT:LDAP_SERVICE_ACCOUNT_PASSWORD"
+        # Enable authentication using a bearer token for Control Center's REST endpoints
+        confluent.controlcenter.rest.authentication.method: BEARER
+        #confluent.controlcenter.auth.bearer.public.key.path: "{{rbac_mds_public_key_path}}"
+        #confluent.controlcenter.metadata.username: "{{sasl_scram_users.control_center.principal}}"
+        #confluent.controlcenter.metadata.password: "{{sasl_scram_users.control_center.password}}"
+        # NOTE: Must match the MDS public key
+        public.key.path: "{{rbac_mds_public_key_path}}"
             
 schema_registry:
    hosts:

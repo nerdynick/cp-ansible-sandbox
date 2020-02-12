@@ -7,6 +7,17 @@
   - import_role:
       name: confluent.common
     become: yes
+  - name: Creating Folder for Private
+    file:
+      path: /var/ssl/private
+      state: directory
+      mode: 0755
+    become: yes
+  - name: Copy MDS Public Key to Host
+    copy:
+      src: "{{rbac_mds_public_key_filepath}}"
+      dest: "{{rbac_mds_public_key_path}}"
+    become: yes
     
 - name: Zookeeper Provisioning
   hosts: zookeeper
@@ -21,6 +32,24 @@
   hosts: kafka_broker
   tags: kafka_broker
   tasks:
+  - name: Copy MDS Private Key to Host
+    copy:
+      src: "{{rbac_mds_private_key_filepath}}"
+      dest: "{{rbac_mds_private_key_path}}"
+  - name: Install Confluent CLI
+    shell: |
+      curl -L https://cnfl.io/cli | sh -s -- -b /usr/local/bin
+    run_once: true
+  - name: Creating Folder for Secrets
+    file:
+      path: /var/ssl/private/secrets
+      state: directory
+      mode: 0755
+    become: yes
+#  - name: Coping Secrets Over
+#    copy:
+#      src: "{{secrets_filepath}}"
+#      dest: "{{secrets_path}}"
   - import_role:
       name: confluent.kafka_broker
     become: yes
