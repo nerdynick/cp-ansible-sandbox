@@ -22,7 +22,6 @@
 - name: Zookeeper Provisioning
   hosts: zookeeper
   tags: zookeeper
-  pre_tasks:
   tasks:
   - import_role:
       name: confluent.zookeeper
@@ -30,69 +29,58 @@
     
 - name: Kafka Broker Provisioning
   hosts: kafka_broker
+  gather_facts: no
   tags: kafka_broker
   tasks:
   - name: Copy MDS Private Key to Host
     copy:
       src: "{{rbac_mds_private_key_filepath}}"
       dest: "{{rbac_mds_private_key_path}}"
-  - name: Install Confluent CLI
-    shell: |
-      curl -L https://cnfl.io/cli | sh -s -- -b /usr/local/bin
-    run_once: true
-  - name: Creating Folder for Secrets
-    file:
-      path: /var/ssl/private/secrets
-      state: directory
-      mode: 0755
-    become: yes
-#  - name: Coping Secrets Over
-#    copy:
-#      src: "{{secrets_filepath}}"
-#      dest: "{{secrets_path}}"
   - import_role:
       name: confluent.kafka_broker
     become: yes
     
 - name: Control Center Provisioning
   hosts: control_center
+  gather_facts: no
   tags: control_center
   tasks:
   - import_role:
       name: confluent.control_center
     become: yes
-    
-- name: Kafka Connect Provisioning
-  hosts: kafka_connect_ssl
-  tags: kafka_connect
-  tasks:
-  - import_role:
-      name: confluent.kafka_connect
-    become: yes
 
 - name: Schema Registry Provisioning
-  hosts: schema_registry_ssl
+  hosts: schema_registry
+  gather_facts: no
   tags:
     - schema_registry
   tasks:
   - import_role:
       name: confluent.schema_registry
-    become: yes
-      
+
+- name: Kafta Connect Provisioning
+  hosts: kafka_connect
+  gather_facts: no
+  tags:
+    - kafka_connect
+  tasks:
+  - import_role:
+      name: confluent.kafka_connect
+
 - name: KSQL Provisioning
-  hosts: ksql_ssl
+  hosts: ksql
+  gather_facts: no
   tags:
     - ksql
   tasks:
   - import_role:
       name: confluent.ksql
-    become: yes
-      
+
 - name: Kafka Rest Provisioning
   hosts: kafka_rest
+  gather_facts: no
   tags:
     - kafka_rest
   tasks:
   - import_role:
       name: confluent.kafka_rest
-    become: yes
