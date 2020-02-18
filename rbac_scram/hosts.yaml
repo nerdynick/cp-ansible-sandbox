@@ -1,8 +1,8 @@
 all:
   vars:
     control_center_kafka_listener_name: rbac
-    schema_registry_kafka_listener_name: rbac #external
-    kafka_connect_kafka_listener_name: rbac
+    schema_registry_kafka_listener_name: external #rbac
+    kafka_connect_kafka_listener_name: external #rbac
     ansible_become: true
     all_ssl_password: "{{vault_ssl_password}}"
     pkcs12_enabled: false #Optional to use PKSC12 over JKS
@@ -103,7 +103,7 @@ kafka_broker:
         #  Reasoning: A GC (global catalog) server returns referrals on 389 to refer to the greater AD "forest", but acts like a regular LDAP server on 3268 (and 3269 for LDAPS)
         ldap.java.naming.provider.url: ldap://ad.bootcamp.confluent.io:3268
         ldap.java.naming.security.authentication: simple
-        ldap.java.naming.security.credentials: {{vault_service_account_password}}
+        ldap.java.naming.security.credentials: "{{vault_service_account_password}}"
         ldap.java.naming.security.principal: "CN=Nikoleta KFK1,OU=Nikoleta,OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io"
         #How to enable LDAPS (aka SSL/TLS for LDAP)
         #ldap.java.naming.security.protocol: SSL
@@ -146,8 +146,8 @@ control_center:
       ROCKSDB_SHAREDLIB_DIR: /tmp
     control_center:
       properties:
-        confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
-        confluent.controlcenter.schema.registry.enable: 'false' # Set to false if no Schema Registry
+        confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers
+        confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
         confluent.controlcenter.data.dir: /var/lib/confluent/control-center
         # Enable RBAC authorization in Control Center by providing a comma-separated list of Metadata Service (MDS) URLs
         confluent.metadata.bootstrap.server.urls: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8090{% endfor %}"
@@ -165,7 +165,8 @@ schema_registry:
   vars:
     schema_registry:
       properties:
-        schema.registry.group.id: "nikoleta-sr"
+        schema.registry.group.id: "schema-registry" #I believe this one has been deprecated but can't verify as the SingleDC still refers to it. While other docs refer to the one below
+        kafkastore.group.id: "schema-registry"
         # These properties install the Schema Registry security plugin, and configure it to use |rbac| for
         # authorization and OAuth for authentication
         schema.registry.resource.extension.class: io.confluent.kafka.schemaregistry.security.SchemaRegistrySecurityResourceExtension
@@ -181,13 +182,6 @@ schema_registry:
         # This enables anonymous access with a principal of User:ANONYMOUS
         confluent.schema.registry.anonymous.principal: "true"
         authentication.skip.paths: "/*"
-        # Authorize Schema Registry to talk to Kafka (security protocol may also be SASL_SSL if using SSL)
-        kafkastore.sasl.mechanism: OAUTHBEARER
-        kafkastore.sasl.login.callback.handler.class: io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
-        kafkastore.sasl.jaas.config: "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \\\n
-          username=\"nikoleta-kfk1\" \\\n
-          password=\"{{vault_service_account_password}}\" \\\n
-          metadataServerUrls=\"{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8090{% endfor %}\";"
         kafkastore.connection.url: "{% for host in groups['zookeeper'] %}{% if loop.index > 1%},{% endif %}{{ host }}:{{zookeeper.properties.clientPort}}{% endfor %}"
 
 kafka_connect:
@@ -209,24 +203,6 @@ kafka_connect:
         # during authentication
         public.key.path: "{{rbac_mds_public_key_path}}"
         connector.client.config.override.policy: All
-        sasl.mechanism: OAUTHBEARER
-        sasl.login.callback.handler.class: io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
-        sasl.jaas.config: "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \\\n
-          username=\"nikoleta-kfk1\" \\\n
-          password=\"{{vault_service_account_password}}\" \\\n
-          metadataServerUrls=\"{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8090{% endfor %}\";"
-        producer.sasl.mechanism: SCRAM-SHA-256
-        producer.sasl.jaas.config: "org.apache.kafka.common.security.scram.ScramLoginModule required \\\n
-          username=\"{{sasl_scram_users.kafka_connect.principal}}\" password=\"{{sasl_scram_users.kafka_connect.password}}\";"
-        consumer.sasl.mechanism: SCRAM-SHA-256
-        consumer.sasl.jaas.config: "org.apache.kafka.common.security.scram.ScramLoginModule required \\\n
-          username=\"{{sasl_scram_users.kafka_connect.principal}}\" password=\"{{sasl_scram_users.kafka_connect.password}}\";"
-        producer.confluent.monitoring.interceptor.sasl.mechanism: SCRAM-SHA-256
-        producer.confluent.monitoring.interceptor.sasl.jaas.config: "org.apache.kafka.common.security.scram.ScramLoginModule required \\\n
-          username=\"{{sasl_scram_users.kafka_connect.principal}}\" password=\"{{sasl_scram_users.kafka_connect.password}}\";"
-        consumer.confluent.monitoring.interceptor.sasl.mechanism: SCRAM-SHA-256
-        consumer.confluent.monitoring.interceptor.sasl.jaas.config: "org.apache.kafka.common.security.scram.ScramLoginModule required \\\n
-          username=\"{{sasl_scram_users.kafka_connect.principal}}\" password=\"{{sasl_scram_users.kafka_connect.password}}\";"
         
 
 ksql:
