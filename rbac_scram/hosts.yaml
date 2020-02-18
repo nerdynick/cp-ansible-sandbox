@@ -126,7 +126,7 @@ kafka_broker:
         super.users: User:admin;User:nikoleta-kfk1;User:nikoleta-kfk2;User:nikoleta
         broker.users: User:admin
         confluent.metadata.server.advertised.listeners: "http://{{inventory_hostname}}:8090,https://{{inventory_hostname}}:8091"
-        confluent.metadata.server.listeners: http://0.0.0.0:8090,https://0.0.0.0:8091
+        confluent.metadata.server.listeners: http://0.0.0.0:8090,https://0.0.0.0:8091 #We do both a Plain & SSL here because Confluent CLI can't handle SSL right now fully or well
         confluent.metadata.server.authentication.method: BEARER
         confluent.metadata.server.public.key.path: "{{rbac_mds_public_key_path}}"
         confluent.metadata.server.token.key.path: "{{rbac_mds_private_key_path}}"
