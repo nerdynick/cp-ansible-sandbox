@@ -1,94 +1,83 @@
 all:
-   vars:
-      sasl_protocol: none
-      confluent_repo_version: 5.4 #Optional
-      confluent_package_version: 5.4.0 #Optional
-      confluent:
-         support:
-            metrics_enabled: false
-            customer_id: ""
-      install_netcat: false #Defaults to true
-      install_java: true #Disable if you wish to get Java from elsewhere
-      jolokia_enabled: false #Disables Jolokia download/install
-      jmxexporter_enabled: false #Enable to install Prometheus
-      kafka_broker_configure_additional_brokers: true #The following 3 sets are needed to provide proper advertisment
-      kafka_broker_inter_broker_listener_name: external
-      kafka_broker_custom_listeners: 
-         external:
-            name: EXTERNAL
-            port: 9092
-            ssl_enabled: false
-            ssl_mutual_auth_enabled: false
-            sasl_protocol: none
-            hostname: "{{inventory_hostname}}"
+  vars:
+    ansible_become: true
+    confluent_repo_version: 5.4 #Optional
+    confluent_package_version: 5.4.0 #Optional
+#    confluent_package_redhat_suffix: "" #Needed for doing <5.3 installs
+#    confluent_package_debian_suffix: "" #Needed for doing <5.3 installs
+    confluent:
+       support:
+          metrics_enabled: false
+          customer_id: ""
+    install_netcat: false #Defaults to true
+    install_java: true #Disable if you wish to get Java from elsewhere
+    jolokia_enabled: false #Disables Jolokia download/install
+    jmxexporter_enabled: false #Enable to install Prometheus
+    kafka_broker_configure_additional_brokers: true #The following 3 sets are needed to provide proper advertisment
+    kafka_broker_inter_broker_listener_name: external
+    kafka_broker_custom_listeners: 
+      external:
+        name: EXTERNAL
+        port: 9092
+        ssl_enabled: false
+        ssl_mutual_auth_enabled: false
+        sasl_protocol: none
+        hostname: "{{inventory_hostname}}"
       
 zookeeper:
-   hosts:
-      zk[1:3].nikoleta.aws.ps.confluent.io:
-   vars:
-      zookeeper_data_dir: /var/lib/zookeeper
-      zookeeper:
-         log_path: /var/log/kafka/
-         properties:
-            '4lw.commands.whitelist': "stat, ruok, srvr, mntr" #Optional, this enables the 4 primary 4 letter words
+  hosts:
+    zk[1:3].nikoleta.aws.ps.confluent.io:
+  vars:
+    zookeeper_data_dir: /var/lib/zookeeper
+    zookeeper:
+      properties:
+        '4lw.commands.whitelist': "stat, ruok, srvr, mntr" #Optional, this enables the 4 primary 4 letter words
          
 kafka_broker:
-   hosts:
-      kfk1.nikoleta.aws.ps.confluent.io:
-      kfk2.nikoleta.aws.ps.confluent.io:
-      kfk3.nikoleta.aws.ps.confluent.io:
-   vars:
-      kafka_broker_service_environment_overrides:
-         KAFKA_HEAP_OPTS: "-Xmx1g"
-      kafka_broker:
-         datadir:
-            - /var/lib/kafka/data
-         properties:
-            num.partitions: 3
-            min.insync.replicas: 2
-            log.retention.hours: 3 #Adjust to desired value. Set low for test envs.
-            default.replication.factor: 3
-            #MetricsReport Specific Configs
-            confluent.metrics.reporter.topic.partitions: 12
-            confluent.metrics.reporter.topic.replicas: 3
-            confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs. 
+  hosts:
+    kfk1.nikoleta.aws.ps.confluent.io:
+    kfk2.nikoleta.aws.ps.confluent.io:
+    kfk3.nikoleta.aws.ps.confluent.io:
+  vars:
+    kafka_broker_service_environment_overrides:
+      KAFKA_HEAP_OPTS: "-Xmx1g"
+    kafka_broker:
+    datadir:
+    - /var/lib/kafka/data
+    properties:
+      num.partitions: 3
+      min.insync.replicas: 2
+      log.retention.hours: 3 #Adjust to desired value. Set low for test envs.
+      default.replication.factor: 3
+      #MetricsReport Specific Configs
+      confluent.metrics.reporter.topic.partitions: 12
+      confluent.metrics.reporter.topic.replicas: 3
+      confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs. 
             
 control_center:
-   hosts:
-      ccc1.nikoleta.aws.ps.confluent.io:
-   vars:
-      control_center_custom_java_args: " -Djava.io.tmpdir=/tmp"
-      control_center_service_environment_overrides:
-         ROCKSDB_SHAREDLIB_DIR: /tmp #Optional, but this is how to move the ROCKSDB when noexec is on for /tmp
-      control_center:
-         properties:
-            confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
-            confluent.controlcenter.schema.registry.enable: 'false' # Set to false if no Schema Registry
-            confluent.controlcenter.data.dir: /var/lib/confluent/control-center
+  hosts:
+    ccc1.nikoleta.aws.ps.confluent.io:
+  vars:
+    control_center_rocksdb_path: "/var/lib/confluent/control-center/rocksdb"
+    #control_center_custom_java_args: " -Djava.io.tmpdir=/tmp"
+    control_center:
+      data_dir_path: /var/lib/confluent/control-center
+      properties:
+        confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
+        confluent.controlcenter.schema.registry.enable: 'false' # Set to false if no Schema Registry
             
 schema_registry:
-   hosts:
-      sr1.nikoleta.aws.ps.confluent.io:
+  hosts:
+    sr1.nikoleta.aws.ps.confluent.io:
                   
 kafka_connect:
-   hosts:
-      connect1.nikoleta.aws.ps.confluent.io:
-   vars:
-      kafka_connect:
-         properties:
-            rest.advertised.host.name: "{{inventory_hostname}}"
+  hosts:
+    connect1.nikoleta.aws.ps.confluent.io:
                       
 ksql:
-   hosts:
-      ksql1.nikoleta.aws.ps.confluent.io:
-   vars:
-      ksql_jolokia_port: 7774 #Needed regardless of Jolokia being enabled
-      kafka_port: 9092
-      ksql_listener_port: 8088 #Optional
+  hosts:
+    ksql1.nikoleta.aws.ps.confluent.io:
       
 kafka_rest:
-   hosts:
-      rest1.nikoleta.aws.ps.confluent.io:
-   vars:
-      kafka_rest_jolokia_port: 7775 #Needed regardless of Jolokia being enabled
-      kafka_port: 9092
+  hosts:
+    rest1.nikoleta.aws.ps.confluent.io::::
