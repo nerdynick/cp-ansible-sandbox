@@ -94,9 +94,23 @@ kafka_broker:
         confluent.metrics.reporter.topic.partitions: 12
         confluent.metrics.reporter.topic.replicas: 3
         confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs.
-        #RBAC/MDS Configurations
+        #MDS - RBAC Configurations
         authorizer.class.name: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
         confluent.authorizer.access.rule.providers: ZK_ACL,CONFLUENT
+        #MDS - MDS & LDAP Configs
+        super.users: User:admin;User:nikoleta-kfk1;User:nikoleta-kfk2;User:nikoleta
+        broker.users: User:admin
+        confluent.metadata.server.advertised.listeners: "http://{{inventory_hostname}}:8090,https://{{inventory_hostname}}:8091"
+        confluent.metadata.server.listeners: http://0.0.0.0:8090,https://0.0.0.0:8091 #We do both a Plain & SSL here because Confluent CLI can't handle SSL right now fully or well
+        confluent.metadata.server.authentication.method: BEARER
+        confluent.metadata.server.public.key.path: "{{rbac_mds_public_key_path}}"
+        confluent.metadata.server.token.key.path: "{{rbac_mds_private_key_path}}"
+        confluent.metadata.server.ssl.keystore.location: "{{kafka_broker_keystore_path}}"
+        confluent.metadata.server.ssl.keystore.password: "{{kafka_broker_keystore_storepass}}"
+        confluent.metadata.server.ssl.key.password: "{{kafka_broker_keystore_keypass}}"
+        confluent.metadata.server.ssl.truststore.location: "{{kafka_broker_truststore_path}}"
+        confluent.metadata.server.ssl.truststore.password: "{{kafka_broker_truststore_storepass}}"
+        confluent.metadata.server.token.max.lifetime.ms: 3600000
         #Sometimes you'll get the error "javax.naming.PartialResultException: Unprocessed Continuation Reference(s);" Changing the port can help.
         #  If you were using the port 389 change it to 3268
         #  If you were using the port 636 change it to 3269
@@ -123,19 +137,6 @@ kafka_broker:
         ldap.user.memberof.attribute: memberOf
         ldap.user.memberof.attribute.pattern: "CN=(.*),OU=Nikoleta,OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io"
         ldap.user.search.filter: "(memberOf=CN=NikoletaGroup,OU=Nikoleta,OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io)"
-        super.users: User:admin;User:nikoleta-kfk1;User:nikoleta-kfk2;User:nikoleta
-        broker.users: User:admin
-        confluent.metadata.server.advertised.listeners: "http://{{inventory_hostname}}:8090,https://{{inventory_hostname}}:8091"
-        confluent.metadata.server.listeners: http://0.0.0.0:8090,https://0.0.0.0:8091 #We do both a Plain & SSL here because Confluent CLI can't handle SSL right now fully or well
-        confluent.metadata.server.authentication.method: BEARER
-        confluent.metadata.server.public.key.path: "{{rbac_mds_public_key_path}}"
-        confluent.metadata.server.token.key.path: "{{rbac_mds_private_key_path}}"
-        confluent.metadata.server.ssl.keystore.location: "{{kafka_broker_keystore_path}}"
-        confluent.metadata.server.ssl.keystore.password: "{{kafka_broker_keystore_storepass}}"
-        confluent.metadata.server.ssl.key.password: "{{kafka_broker_keystore_keypass}}"
-        confluent.metadata.server.ssl.truststore.location: "{{kafka_broker_truststore_path}}"
-        confluent.metadata.server.ssl.truststore.password: "{{kafka_broker_truststore_storepass}}"
-        confluent.metadata.server.token.max.lifetime.ms: 3600000
             
 control_center:
   hosts:
@@ -182,6 +183,7 @@ schema_registry:
         # This enables anonymous access with a principal of User:ANONYMOUS
         confluent.schema.registry.anonymous.principal: "true"
         authentication.skip.paths: "/*"
+        #This was needed for when not having a license key. However needs to be tested when one is provided
         kafkastore.connection.url: "{% for host in groups['zookeeper'] %}{% if loop.index > 1%},{% endif %}{{ host }}:{{zookeeper.properties.clientPort}}{% endfor %}"
 
 kafka_connect:
@@ -202,6 +204,7 @@ kafka_connect:
         # The path to a directory containing public keys that should be used to verify json web tokens
         # during authentication
         public.key.path: "{{rbac_mds_public_key_path}}"
+        #Allows override of producer/consumer settings via the JSON payload
         connector.client.config.override.policy: All
         
 
