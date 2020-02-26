@@ -1,52 +1,37 @@
-- name: Host Provisioning
+---
+- name: Host Prerequisites
   hosts: zookeeper:kafka_broker:schema_registry:kafka_connect:ksql:control_center:kafka_rest
-  tags: preflight
+  tags:
+    - preflight
   tasks:
   - import_role:
-      name: confluent.variables_handlers
-  - import_role:
       name: confluent.common
-    become: yes
-    
+
 - name: Zookeeper Provisioning
   hosts: zookeeper
-  tags: zookeeper
-  pre_tasks:
+  tags:
+    - zookeeper
   tasks:
   - import_role:
       name: confluent.zookeeper
-    become: yes
-    
+#    vars:
+#      zookeeper_packages:
+#        - "confluent-common-{{confluent_full_package_version}}"
+#        - "confluent-kafka-2.12-2.2.2-cp1-1"
+
 - name: Kafka Broker Provisioning
   hosts: kafka_broker
-  tags: kafka_broker
+  tags:
+    - kafka_broker
   tasks:
   - import_role:
       name: confluent.kafka_broker
-    become: yes
-    
-- name: Control Center Provisioning
-  hosts: control_center
-  tags: control_center
-  tasks:
-#  - name: Create RocksDB Directory
-#    file:
-#      path: "{{control_center_service_environment_overrides.ROCKSDB_SHAREDLIB_DIR}}"
-#      group: "{{control_center.group}}"
-#      owner: "{{control_center.user}}"
-#      mode: '764'
-#      recurse: yes
-  - import_role:
-      name: confluent.control_center
-    become: yes
-    
-- name: Kafka Connect Provisioning
-  hosts: kafka_connect
-  tags: kafka_connect
-  tasks:
-  - import_role:
-      name: confluent.kafka_connect
-    become: yes
+#    vars:
+#      kafka_broker_packages:
+#        - "confluent-common-{{confluent_full_package_version}}"
+#        - "confluent-kafka-2.12-2.2.2-cp1-1"
+#        - "confluent-rebalancer-{{confluent_full_package_version}}"
+#        - "confluent-security-{{confluent_full_package_version}}"
 
 - name: Schema Registry Provisioning
   hosts: schema_registry
@@ -55,8 +40,37 @@
   tasks:
   - import_role:
       name: confluent.schema_registry
-    become: yes
-      
+#    vars:
+#      schema_registry_packages:
+#        - "confluent-common-{{confluent_full_package_version}}"
+#        - "confluent-kafka-2.12-2.2.2-cp1-1"
+#        - "confluent-rest-utils-{{confluent_full_package_version}}"
+#        - "confluent-schema-registry-{{confluent_full_package_version}}"
+#        - "confluent-security-{{confluent_full_package_version}}"
+
+- name: Kafta Connect Provisioning
+  hosts: kafka_connect
+  tags:
+    - kafka_connect
+  tasks:
+  - import_role:
+      name: confluent.kafka_connect
+#    vars:
+#      kafka_connect_packages:
+#        - "confluent-common-{{confluent_full_package_version}}"
+#        - "confluent-kafka-2.12-2.2.2-cp1-1"
+#        - "confluent-kafka-connect-storage-common-{{confluent_full_package_version}}"
+#        - "confluent-kafka-connect-s3-{{confluent_full_package_version}}"
+#        - "confluent-kafka-connect-elasticsearch-{{confluent_full_package_version}}"
+#        - "confluent-kafka-connect-jdbc-{{confluent_full_package_version}}"
+#        - "confluent-kafka-connect-jms-{{confluent_full_package_version}}"
+#        - "confluent-kafka-connect-replicator-{{confluent_full_package_version}}"
+#        - "confluent-rest-utils-{{confluent_full_package_version}}"
+#        - "confluent-security-{{confluent_full_package_version}}"
+#        - "confluent-control-center-fe-{{confluent_full_package_version}}"
+#        - "confluent-control-center-{{confluent_full_package_version}}"
+#        - "confluent-schema-registry-{{confluent_full_package_version}}"
+
 - name: KSQL Provisioning
   hosts: ksql
   tags:
@@ -64,8 +78,7 @@
   tasks:
   - import_role:
       name: confluent.ksql
-    become: yes
-      
+
 - name: Kafka Rest Provisioning
   hosts: kafka_rest
   tags:
@@ -73,4 +86,18 @@
   tasks:
   - import_role:
       name: confluent.kafka_rest
-    become: yes
+
+- name: Control Center Provisioning
+  hosts: control_center
+  tags:
+    - control_center
+  tasks:
+  - import_role:
+      name: confluent.control_center
+#    vars:
+#      control_center_packages:
+#        - "confluent-common-{{confluent_full_package_version}}"
+#        - "confluent-kafka-2.12-2.2.2-cp1-1"
+#        - "confluent-rest-utils-{{confluent_full_package_version}}"
+#        - "confluent-control-center-fe-{{confluent_full_package_version}}"
+#        - "confluent-control-center-{{confluent_full_package_version}}"
