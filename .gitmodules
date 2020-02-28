@@ -4,3 +4,6 @@
 [submodule "keystore-scripts"]
 	path = keystore-scripts
 	url = git@github.com:nerdynick/keystore-scripts.git
+[submodule "confluent-rbac-utility-scripts"]
+	path = confluent-rbac-utility-scripts
+	url = git@github.com:nerdynick/confluent-rbac-utility-scripts.git

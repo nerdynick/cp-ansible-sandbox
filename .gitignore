@@ -5,6 +5,8 @@
 **/*.csr
 **/*.key
 **/*.srl
+**/*.pem
+**/*.cer
 *.keytab
 .DS_Store
 .pydevproject
