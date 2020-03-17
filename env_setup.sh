@@ -21,7 +21,7 @@ ln -s cp-ansible/roles
 ln -s cp-ansible/tasks
 ln -s cp-ansible/filter_plugins
 cp cp-ansible/ansible.cfg ansible.cfg
-cp cp-ansible/all.yml install.yml
+cp cp-ansible/all.yml all.yml
 
 #Add and make 1st commit
 git add *

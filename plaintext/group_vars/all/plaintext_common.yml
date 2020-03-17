@@ -1,0 +1,48 @@
+#Global Vars
+ansible_become: true
+confluent_repo_version: 5.4 #Optional
+confluent_package_version: 5.4.0 #Optional
+#confluent_package_redhat_suffix: "" #Needed for doing <5.3 installs
+#confluent_package_debian_suffix: "" #Needed for doing <5.3 installs
+confluent:
+   support:
+      metrics_enabled: false
+      customer_id: ""
+install_netcat: false #Defaults to true
+install_java: true #Disable if you wish to get Java from elsewhere
+jolokia_enabled: false #Disables Jolokia download/install
+jmxexporter_enabled: false #Enable to install Prometheus
+kafka_broker_default_listeners: 
+  external:
+    hostname: "{{inventory_hostname}}" #Set the Advertised Name
+    
+#Zookeeper Vars
+zookeeper_data_dir: /var/lib/zookeeper
+zookeeper:
+  properties:
+    '4lw.commands.whitelist': "stat, ruok, srvr, mntr" #Optional, this enables the 4 primary 4 letter words
+      
+#Broker Vars
+kafka_broker_service_environment_overrides:
+  KAFKA_HEAP_OPTS: "-Xmx1g"
+kafka_broker:
+  datadir:
+  - /var/lib/kafka/data
+  properties:
+    num.partitions: 3
+    min.insync.replicas: 2
+    log.retention.hours: 3 #Adjust to desired value. Set low for test envs.
+    default.replication.factor: 3
+    #MetricsReport Specific Configs
+    confluent.metrics.reporter.topic.partitions: 12
+    confluent.metrics.reporter.topic.replicas: 3
+    confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs. 
+            
+#Control Center Vars
+control_center_rocksdb_path: "/var/lib/confluent/control-center/rocksdb"
+#control_center_custom_java_args: " -Djava.io.tmpdir=/tmp"
+control_center:
+  data_dir_path: /var/lib/confluent/control-center
+  properties:
+    confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
+    confluent.controlcenter.schema.registry.enable: 'false' # Set to false if no Schema Registry

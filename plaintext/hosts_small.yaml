@@ -1,0 +1,42 @@
+zookeeper:
+  hosts:
+    zk1.nikoleta.aws.ps.confluent.io:
+         
+kafka_broker:
+  hosts:
+    kfk1.nikoleta.aws.ps.confluent.io:
+  vars:
+    kafka_broker:
+      properties:
+        default.replication.factor: 1
+        #MetricsReport Specific Configs
+        confluent.metrics.reporter.topic.partitions: 12
+        confluent.metrics.reporter.topic.replicas: 1
+        confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs. 
+    
+control_center:
+  hosts:
+    ccc1.nikoleta.aws.ps.confluent.io:
+  vars:
+    control_center:
+      properties:
+        confluent.controlcenter.command.topic.replication: 1
+        confluent.controlcenter.internal.topics.replication: 1
+        confluent.metrics.topic.replication: 1
+        confluent.monitoring.interceptor.topic.replication: 1
+             
+schema_registry:
+  hosts:
+    sr1.nikoleta.aws.ps.confluent.io:
+                  
+kafka_connect:
+  hosts:
+    connect1.nikoleta.aws.ps.confluent.io:
+                      
+ksql:
+  hosts:
+    ksql1.nikoleta.aws.ps.confluent.io:
+      
+kafka_rest:
+  hosts:
+    rest1.nikoleta.aws.ps.confluent.io:

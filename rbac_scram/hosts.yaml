@@ -166,7 +166,7 @@ schema_registry:
   vars:
     schema_registry:
       properties:
-        schema.registry.group.id: "schema-registry" #I believe this one has been deprecated but can't verify as the SingleDC still refers to it. While other docs refer to the one below
+        schema.registry.group.id: "schema-registry"
         kafkastore.group.id: "schema-registry"
         # These properties install the Schema Registry security plugin, and configure it to use |rbac| for
         # authorization and OAuth for authentication
