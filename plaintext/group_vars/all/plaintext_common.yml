@@ -1,7 +1,7 @@
 #Global Vars
 ansible_become: true
 confluent_repo_version: 5.4 #Optional
-confluent_package_version: 5.4.0 #Optional
+confluent_package_version: 5.4.1 #Optional
 #confluent_package_redhat_suffix: "" #Needed for doing <5.3 installs
 #confluent_package_debian_suffix: "" #Needed for doing <5.3 installs
 confluent:
@@ -10,8 +10,8 @@ confluent:
       customer_id: ""
 install_netcat: false #Defaults to true
 install_java: true #Disable if you wish to get Java from elsewhere
-jolokia_enabled: false #Disables Jolokia download/install
-jmxexporter_enabled: false #Enable to install Prometheus
+jolokia_enabled: true #Disables Jolokia download/install
+jmxexporter_enabled: true #Enable to install Prometheus
 kafka_broker_default_listeners: 
   external:
     hostname: "{{inventory_hostname}}" #Set the Advertised Name
@@ -45,4 +45,10 @@ control_center:
   data_dir_path: /var/lib/confluent/control-center
   properties:
     confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
-    confluent.controlcenter.schema.registry.enable: 'false' # Set to false if no Schema Registry
+    confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
+
+schema_registry:
+  properties:
+    schema.registry.group.id: schema-registry
+    kafkastore.group.id: schema-registry
+    master.eligibility: 'true'

@@ -32,6 +32,13 @@ schema_registry:
 kafka_connect:
   hosts:
     connect1.nikoleta.aws.ps.confluent.io:
+  vars:
+    kafka_connect_confluent_hub_plugins:
+    - "confluentinc/kafka-connect-s3-source:1.2.1"
+    kafka_connect_plugins_remote:
+    - "https://d1i4a15mxbxib1.cloudfront.net/api/plugins/jcustenborder/kafka-connect-spooldir/versions/2.0.43/jcustenborder-kafka-connect-spooldir-2.0.43.zip"
+    kafka_connect_plugins:
+    - "/Users/nikoleta.verbeck/Downloads/confluentinc-kafka-connect-splunk-source-1.0.2.zip"
                       
 ksql:
   hosts:
