@@ -32,7 +32,7 @@ This is done to minimize maintenance as well as help document the layers that go
 ## Roadmap
 
 * Add examples, in this order
-** Multi-DC with Centralize Management Cluster
-** Multi-DC with Centralize Management Cluster + RBAC
-** SASL_SSL + GSSAPI
-** SASL_SSL + GSAPI & OAUTHBEARER/RBAC
+ * Multi-DC with Centralize Management Cluster
+ * Multi-DC with Centralize Management Cluster + RBAC
+ * SASL_SSL + GSSAPI
+ * SASL_SSL + GSAPI & OAUTHBEARER/RBAC
