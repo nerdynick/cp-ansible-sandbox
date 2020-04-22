@@ -31,8 +31,8 @@ This is done to minimize maintenance as well as help document the layers that go
 
 ## Roadmap
 
-1. Add examples, in this order
- 1. Multi-DC with Centralize Management Cluster
- 1. Multi-DC with Centralize Management Cluster + RBAC
- 1. SASL_SSL + GSSAPI
- 1. SASL_SSL + GSAPI & OAUTHBEARER/RBAC
+* Add examples, in this order
+** Multi-DC with Centralize Management Cluster
+** Multi-DC with Centralize Management Cluster + RBAC
+** SASL_SSL + GSSAPI
+** SASL_SSL + GSAPI & OAUTHBEARER/RBAC
