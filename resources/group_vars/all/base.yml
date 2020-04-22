@@ -16,9 +16,12 @@ kafka_broker_default_listeners:
   external:
     hostname: "{{inventory_hostname}}" #Set the Advertised Name
     
+ansible_become: true
+
 #Zookeeper Vars
 zookeeper_data_dir: /var/lib/zookeeper
 zookeeper:
+  log_path: /var/log/kafka/
   properties:
     '4lw.commands.whitelist': "stat, ruok, srvr, mntr" #Optional, this enables the 4 primary 4 letter words
       
@@ -44,11 +47,26 @@ control_center_rocksdb_path: "/var/lib/confluent/control-center/rocksdb"
 control_center:
   data_dir_path: /var/lib/confluent/control-center
   properties:
-    confluent.controlcenter.ksql.enable: 'false' #Set to false if no KSQL Servers
+    confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers
     confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
+    confluent.controlcenter.command.topic.replication: 3
+    confluent.controlcenter.internal.topics.replication: 3
+    confluent.metrics.topic.replication: 3
+    confluent.monitoring.interceptor.topic.replication: 3
 
 schema_registry:
   properties:
     schema.registry.group.id: schema-registry
     kafkastore.group.id: schema-registry
     master.eligibility: 'true'
+    
+kafka_connect:
+  properties:
+    rest.advertised.host.name: "{{inventory_hostname}}"
+
+ksql:
+  properties:
+    ksql.internal.topic.replicas: 3
+    ksql.streams.replication.factor: 3
+    ksql.streams.num.standby.replicas: 1
+    

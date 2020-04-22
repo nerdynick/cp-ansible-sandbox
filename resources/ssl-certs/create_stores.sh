@@ -1,0 +1,1 @@
+../../keystore-scripts/src/main/bash/create_stores.sh

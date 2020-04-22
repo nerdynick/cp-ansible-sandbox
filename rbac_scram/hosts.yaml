@@ -1,224 +1,27 @@
-all:
-  vars:
-    control_center_kafka_listener_name: rbac
-    schema_registry_kafka_listener_name: external #rbac
-    kafka_connect_kafka_listener_name: external #rbac
-    ansible_become: true
-    all_ssl_password: "{{vault_ssl_password}}"
-    pkcs12_enabled: false #Optional to use PKSC12 over JKS
-    ssl_custom_certs: false #Set to true to provide your own certs & keys. Provide the following properties.
-    #ssl_ca_cert_filepath: 
-    #ssl_signed_cert_filepath:
-    #ssl_key_filepath: 
-    ssl_provided_keystore_and_truststore: true #If true provide the keystores
-    ssl_keystore_filepath: "ssl-certs/{{inventory_hostname}}.keystore.jks"
-    ssl_keystore_key_password: "{{all_ssl_password}}"
-    ssl_keystore_store_password: "{{all_ssl_password}}"
-    ssl_truststore_filepath: "ssl-certs/{{inventory_hostname}}.truststore.jks"
-    ssl_truststore_password: "{{all_ssl_password}}"
-    sasl_protocol: none
-    confluent_repo_version: 5.4 #Optional
-    confluent_package_version: 5.4.0 #Optional
-    confluent:
-      support:
-        metrics_enabled: false
-        customer_id: ""
-    install_netcat: true #Defaults to true, Installs Netcat on all systems
-    install_java: true #Defaults to true, Installs OpenJDK 8 on all systems
-    jolokia_enabled: true #Defaults to true, Installs/Enables Jolokia on all applications
-    jmxexporter_enabled: true #Defaults to false, Installs Prometheus on all, but currently enables it only on ZK & KFK
-    kafka_broker_configure_additional_brokers: true #The following 3 sets are needed to provide proper advertisment
-    kafka_broker_inter_broker_listener_name: external
-    kafka_broker_custom_listeners: 
-      external:
-        name: EXTERNAL
-        port: 9092
-        ssl_enabled: true
-        ssl_mutual_auth_enabled: false
-        sasl_protocol: scram
-        hostname: "{{inventory_hostname}}"
-      rbac:
-        name: RBAC
-        port: 9093
-        ssl_enabled: true
-        ssl_mutual_auth_enabled: "{{ ssl_mutual_auth_enabled }}"
-        sasl_protocol: OAUTHBEARER
-        server_callback: io.confluent.kafka.server.plugins.auth.token.TokenBearerValidatorCallbackHandler
-        login_callback: io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
-        options:
-          publicKeyPath: "{{ rbac_mds_public_key_path }}"
-        hostname: "{{inventory_hostname}}"
-    rbac_enabled: true
-    rbac_mds_public_key_filepath: pem/public.pem
-    rbac_mds_private_key_filepath: pem/tokenKeypair.pem
-    rbac_mds_public_key_filename: public.pem
-    rbac_mds_private_key_filename: tokenKeypair.pem
-    rbac_mds_public_key_path: "/var/ssl/private/{{rbac_mds_public_key_filename}}"
-    rbac_mds_private_key_path: "/var/ssl/private/{{rbac_mds_private_key_filename}}"
-    #Enable the below to turn SSL/TLS for the REST interfaces
-    control_center_ssl_enabled: false 
-    ksql_ssl_enabled: false
-    kafka_connect_ssl_enabled: false
-    kafka_rest_ssl_enabled: false
-    schema_registry_ssl_enabled: false
-    #STOP
-      
-      
 zookeeper:
   hosts:
     zk[1:3].nikoleta.aws.ps.confluent.io:
-  vars:
-    zookeeper_data_dir: /var/lib/zookeeper
-    zookeeper:
-      log_path: /var/log/kafka/
-      properties:
-          '4lw.commands.whitelist': "stat, ruok, srvr, mntr"
          
 kafka_broker:
   hosts:
-    kfk1.nikoleta.aws.ps.confluent.io:
-    kfk2.nikoleta.aws.ps.confluent.io:
-    kfk3.nikoleta.aws.ps.confluent.io:
-  vars:
-    kafka_broker_service_environment_overrides:
-      KAFKA_HEAP_OPTS: "-Xmx1g"
-    kafka_broker:
-      datadir:
-        - /var/lib/kafka/data
-      properties:
-        num.partitions: 3
-        min.insync.replicas: 2
-        log.retention.hours: 3 #Adjust to desired value. Set low for test envs.
-        default.replication.factor: 3
-        #MetricsReport Specific Configs
-        confluent.metrics.reporter.topic.partitions: 12
-        confluent.metrics.reporter.topic.replicas: 3
-        confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs.
-        #MDS - RBAC Configurations
-        authorizer.class.name: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
-        confluent.authorizer.access.rule.providers: ZK_ACL,CONFLUENT
-        #MDS - MDS & LDAP Configs
-        super.users: User:admin;User:nikoleta-kfk1;User:nikoleta-kfk2;User:nikoleta
-        broker.users: User:admin
-        confluent.metadata.server.advertised.listeners: "http://{{inventory_hostname}}:8090,https://{{inventory_hostname}}:8091"
-        confluent.metadata.server.listeners: http://0.0.0.0:8090,https://0.0.0.0:8091 #We do both a Plain & SSL here because Confluent CLI can't handle SSL right now fully or well
-        confluent.metadata.server.authentication.method: BEARER
-        confluent.metadata.server.public.key.path: "{{rbac_mds_public_key_path}}"
-        confluent.metadata.server.token.key.path: "{{rbac_mds_private_key_path}}"
-        confluent.metadata.server.ssl.keystore.location: "{{kafka_broker_keystore_path}}"
-        confluent.metadata.server.ssl.keystore.password: "{{kafka_broker_keystore_storepass}}"
-        confluent.metadata.server.ssl.key.password: "{{kafka_broker_keystore_keypass}}"
-        confluent.metadata.server.ssl.truststore.location: "{{kafka_broker_truststore_path}}"
-        confluent.metadata.server.ssl.truststore.password: "{{kafka_broker_truststore_storepass}}"
-        confluent.metadata.server.token.max.lifetime.ms: 3600000
-        #Sometimes you'll get the error "javax.naming.PartialResultException: Unprocessed Continuation Reference(s);" Changing the port can help.
-        #  If you were using the port 389 change it to 3268
-        #  If you were using the port 636 change it to 3269
-        #  Reasoning: A GC (global catalog) server returns referrals on 389 to refer to the greater AD "forest", but acts like a regular LDAP server on 3268 (and 3269 for LDAPS)
-        ldap.java.naming.provider.url: ldap://ad.bootcamp.confluent.io:3268
-        ldap.java.naming.security.authentication: simple
-        ldap.java.naming.security.credentials: "{{vault_service_account_password}}"
-        ldap.java.naming.security.principal: "CN=Nikoleta KFK1,OU=Nikoleta,OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io"
-        #How to enable LDAPS (aka SSL/TLS for LDAP)
-        #ldap.java.naming.security.protocol: SSL
-        #ldap.ssl.truststore.location: "{{kafka_broker_truststore_path}}"
-        #ldap.ssl.truststore.password: "{{kafka_broker_truststore_storepass}}"
-        #Sample Group Based LDAP Search
-        #ldap.group.name.attribute: sAMAccountName
-        #ldap.group.object.class: group
-        #ldap.group.search.base: OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io
-        #ldap.group.search.scope: 2
-        #Sample User Based LDAP Search
-        ldap.search.mode: USERS
-        ldap.user.name.attribute: sAMAccountName
-        ldap.user.object.class: user
-        ldap.user.search.base: DC=ad,DC=bootcamp,DC=confluent,DC=io
-        ldap.user.search.scope: 2
-        ldap.user.memberof.attribute: memberOf
-        ldap.user.memberof.attribute.pattern: "CN=(.*),OU=Nikoleta,OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io"
-        ldap.user.search.filter: "(memberOf=CN=NikoletaGroup,OU=Nikoleta,OU=BOOTCAMP,DC=ad,DC=bootcamp,DC=confluent,DC=io)"
-            
+    kfk[1:3].nikoleta.aws.ps.confluent.io:
+           
 control_center:
   hosts:
     ccc1.nikoleta.aws.ps.confluent.io:
-  vars:
-    control_center_custom_java_args: " -Djava.io.tmpdir=/tmp"
-    control_center_service_environment_overrides:
-      ROCKSDB_SHAREDLIB_DIR: /tmp
-    control_center:
-      properties:
-        confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers
-        confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
-        confluent.controlcenter.data.dir: /var/lib/confluent/control-center
-        # Enable RBAC authorization in Control Center by providing a comma-separated list of Metadata Service (MDS) URLs
-        confluent.metadata.bootstrap.server.urls: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8090{% endfor %}"
-        # MDS credentials of an RBAC user for Control Center to act on behalf of
-        # NOTE: This user must be a SystemAdmin on each Apache Kafka cluster
-        confluent.metadata.basic.auth.user.info: "nikoleta-kfk1:{{vault_service_account_password}}"
-        # Enable authentication using a bearer token for Control Center's REST endpoints
-        confluent.controlcenter.rest.authentication.method: BEARER
-        # NOTE: Must match the MDS public key
-        public.key.path: "{{rbac_mds_public_key_path}}"
-            
+          
 schema_registry:
   hosts:
     sr1.nikoleta.aws.ps.confluent.io:
-  vars:
-    schema_registry:
-      properties:
-        schema.registry.group.id: "schema-registry"
-        kafkastore.group.id: "schema-registry"
-        # These properties install the Schema Registry security plugin, and configure it to use |rbac| for
-        # authorization and OAuth for authentication
-        schema.registry.resource.extension.class: io.confluent.kafka.schemaregistry.security.SchemaRegistrySecurityResourceExtension
-        confluent.schema.registry.authorizer.class: io.confluent.kafka.schemaregistry.security.authorizer.rbac.RbacAuthorizer
-        rest.servlet.initializor.classes: io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler
-        confluent.schema.registry.auth.mechanism: JETTY_AUTH
-        confluent.metadata.bootstrap.server.urls: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8090{% endfor %}"
-        # Credentials to use with the MDS, these should usually match those used for talking to Kafka
-        confluent.metadata.basic.auth.user.info: "nikoleta-kfk1:{{vault_service_account_password}}"
-        confluent.metadata.http.auth.credentials.provider: BASIC
-        # The path to public keys that should be used to verify json web tokens during authentication
-        public.key.path: "{{rbac_mds_public_key_path}}"
-        # This enables anonymous access with a principal of User:ANONYMOUS
-        confluent.schema.registry.anonymous.principal: "true"
-        authentication.skip.paths: "/*"
-        #This was needed for when not having a license key. However needs to be tested when one is provided
-        kafkastore.connection.url: "{% for host in groups['zookeeper'] %}{% if loop.index > 1%},{% endif %}{{ host }}:{{zookeeper.properties.clientPort}}{% endfor %}"
-
+    
 kafka_connect:
   hosts:
-    connect1.nikoleta.aws.ps.confluent.io:
-  vars:
-    kafka_connect:
-      properties:
-        rest.advertised.host.name: "{{inventory_hostname}}"
-        # Adds the RBAC REST extension to the Connect worker
-        rest.extension.classes: io.confluent.connect.security.ConnectSecurityExtension
-        # The location of a running metadata service
-        confluent.metadata.bootstrap.server.urls: "{% for host in groups['kafka_broker'] %}{% if loop.index > 1%},{% endif %}http://{{ host }}:8090{% endfor %}"
-        # Credentials to use when communicating with the MDS
-        confluent.metadata.basic.auth.user.info: "nikoleta-kfk1:{{vault_service_account_password}}"
-        confluent.metadata.http.auth.credentials.provider: BASIC
-        rest.servlet.initializor.classes: io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler
-        # The path to a directory containing public keys that should be used to verify json web tokens
-        # during authentication
-        public.key.path: "{{rbac_mds_public_key_path}}"
-        #Allows override of producer/consumer settings via the JSON payload
-        connector.client.config.override.policy: All
-        
+    connect1.nikoleta.aws.ps.confluent.io: 
 
 ksql:
    hosts:
       ksql1.nikoleta.aws.ps.confluent.io:
-   vars:
-      ksql_jolokia_port: 7774 #Needed regardless of Jolokia being enabled
-      kafka_port: 9092
-      ksql_listener_port: 8088 #Optional
       
 kafka_rest:
    hosts:
       rest1.nikoleta.aws.ps.confluent.io:
-   vars:
-      kafka_rest_jolokia_port: 7775 #Needed regardless of Jolokia being enabled
-      kafka_port: 9092
