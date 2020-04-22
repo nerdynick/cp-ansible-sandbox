@@ -2,6 +2,8 @@
 
 This is a collection of Ansible example scripts leveraging the [confluentinc/cp-ansible](https://github.com/confluentinc/cp-ansible) Ansible Roles.
 The goal is to capture a number of the common setups, how to do it in Ansible, and the configurations that come into play for that setup.
+These examples all leverage Ansible's support of `group_vars` folder for variable definitions. 
+This is done to minimize maintenance as well as help document the layers that go into these setups from an opinionated approach focused on security first.
 
 ## Examples
 
@@ -10,26 +12,27 @@ The goal is to capture a number of the common setups, how to do it in Ansible, a
 |Basic PLAINTEXT based setup                          |plaintext    |Core, C3, Connect, SR, KSQL, REST|                                                                                                              |
 |SSL with One-way Authentication                      |ssl_oneway   |Core, C3, Connect, SR, KSQL, REST|                                                                                                           [1]|
 |SSL with Mutual Authentication                       |ssl_mutual   |Core, C3, Connect, SR, KSQL, REST|[1] The REST based clients have mutual authentication disabled. But comments are provided on how to enable it.|
-|SASL_SSL + SCRAM                                     |sasl_scram   |                                 |                                                                                                              |
-|Kerberos with SSL, aka SASL_SSL+GSSAPI               |sasl_gssapi  |Core, C3                         |                                                                                         [1] Under Development|
-|RBAC+SSL using SCRAM for inter-broker comms          |rbac_scram   |                                 |                                                                                                      [1] TODO|
-|RBAC+SSL using GSSAPI/KERBEROS for inter-broker comms|rbac_kerberos|                                 |                                                                                                      [1] TODO|
+|SASL_SSL + SCRAM                                     |sasl_scram   |Core, C3, Connect, SR, KSQL, REST|                                                                                                              |
+|Kerberos with SSL, aka SASL_SSL+GSSAPI               |sasl_gssapi  |                                 |                                                                                                       [1] [2]|
+|RBAC+SSL using SCRAM for inter-broker comms          |rbac_scram   |Core, C3, Connect, SR            |                                                        [1][2] This is coded against cp-ansible 5.4 currently.|
+|Basic PLAINTEXT setup in a Multi Region Cluster setup|mrc_plaintext|Core, C3, Connect, SR, KSQL, REST|                                                                                                              |
 
-[1] Includes Ansible Vault usage to obscure passwords. 
+[1] Includes Ansible Vault usage to obscure passwords.
+[2] Under development. Listed components should be completed.
 
 
 ## Git Submodules
 
-|                                   Repo                                    |Description                                                  |
-|:-------------------------------------------------------------------------:|:------------------------------------------------------------|
-|   [confluentinc/cp-ansible](https://github.com/confluentinc/cp-ansible)   |Confluent Provided Ansible Roles                             |
-|[nerdynick/keystore-scripts](https://github.com/nerdynick/keystore-scripts)|Collection of simple BASH scripts for generating JKS Keystore|
+|Repo                                                                                                   |Description                                                  |
+|:------------------------------------------------------------------------------------------------------|:------------------------------------------------------------|
+|[confluentinc/cp-ansible](https://github.com/confluentinc/cp-ansible)                                  |Confluent Provided Ansible Roles                             |
+|[nerdynick/keystore-scripts](https://github.com/nerdynick/keystore-scripts)                            |Collection of simple BASH scripts for generating JKS Keystore|
+|[nerdynick/confluent-rbac-utility-scripts](https://github.com/nerdynick/confluent-rbac-utility-scripts)|Collection of simple BASH scripts for generating JKS Keystore|
 
 ## Roadmap
 
 1. Add examples, in this order
- 1. SASL_SSL + SCRAM
- 2. SASL_SSL + SCRAM & OAUTHBEARER/RBAC
- 3. SASL_SSL + GSSAPI
- 4. SASL_SSL + GSAPI & OAUTHBEARER/RBAC
-2. Example Operations Scripts
+ 1. Multi-DC with Centralize Management Cluster
+ 1. Multi-DC with Centralize Management Cluster + RBAC
+ 1. SASL_SSL + GSSAPI
+ 1. SASL_SSL + GSAPI & OAUTHBEARER/RBAC
