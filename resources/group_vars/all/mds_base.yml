@@ -1,0 +1,15 @@
+kafka_broker:
+  properties:
+    # NOTE: If the customer uses SPLUNK there is a good change you will need to use a different port. Since Splunk defaults to using 8090 as well
+    confluent.metadata.server.advertised.listeners: "http://{{inventory_hostname}}:8090,https://{{inventory_hostname}}:8091"
+    confluent.metadata.server.listeners: http://0.0.0.0:8090,https://0.0.0.0:8091 #We do both a Plain & SSL here because Confluent CLI can't handle SSL right now fully or well
+    confluent.metadata.server.ssl.keystore.location: "{{kafka_broker_keystore_path}}"
+    confluent.metadata.server.ssl.keystore.password: "{{kafka_broker_keystore_storepass}}"
+    confluent.metadata.server.ssl.key.password: "{{kafka_broker_keystore_keypass}}"
+    confluent.metadata.server.ssl.truststore.location: "{{kafka_broker_truststore_path}}"
+    confluent.metadata.server.ssl.truststore.password: "{{kafka_broker_truststore_storepass}}"
+    # Regardless of RBAC being desired. We should enable this.
+    # This will migrate users over to using the Centralize ZK_ACLS 
+    # As well as enable Audit Logs by default. This sets up a good foundations of security will minimal effort
+    authorizer.class.name: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer   
+    allow.everyone.if.no.acl.found: true #Set this to true until ACLs are required/requested and enabled/setup
