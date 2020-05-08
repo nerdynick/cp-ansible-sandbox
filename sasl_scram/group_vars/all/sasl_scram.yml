@@ -1,6 +1,20 @@
 kafka_broker_default_listeners: 
-   external:
-      sasl_protocol: scram
+   internal:
+     name: INTERNAL
+     ssl_enabled: false
+     sasl_protocol: scram
+     ssl_mutual_auth_enabled: false
+     port: 9093
+      
+# This setting is not required as the above will cover most tradition of use cases. 
+# This is included here to assist with the other install types that need multipule interfaces.       
+kafka_broker_custom_listeners: 
+  external:
+    name: EXTERNAL
+    ssl_enabled: false
+    sasl_protocol: SCRAM
+    ssl_mutual_auth_enabled: false
+    port: 9092
 
 # Not required to be defined as this is the default values.
 # It is shown here for documentation and reference.
