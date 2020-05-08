@@ -4,139 +4,117 @@ zookeeper:
     zookeeper_dc2:
     zookeeper_dc3:
     
-zookeeper_dc1:
-  hosts:
-    zk1.dc1.nikoleta.aws.ps.confluent.io:
-    
-zookeeper_dc2:
-  hosts:
-    zk1.dc2.nikoleta.aws.ps.confluent.io:
-    
-zookeeper_dc3:
-  hosts:
-    zk1.dc3.nikoleta.aws.ps.confluent.io:
-    
 kafka_broker:
   children:
     kafka_broker_dc1:
     kafka_broker_dc2:
-  vars:
-    kafka_broker:
-      properties:
-        replica.selector.class: org.apache.kafka.common.replica.RackAwareReplicaSelector
-     
-kafka_broker_dc1:
-  hosts:
-    kfk[1:3].dc1.nikoleta.aws.ps.confluent.io:
-  vars:
-    kafka_broker:
-      properties:
-        broker.rack: dc1
-        client.rack: dc1 #Used for License topic consumption
-     
-kafka_broker_dc2:
-  hosts:
-    kfk[1:3].dc2.nikoleta.aws.ps.confluent.io:
-  vars:
-    kafka_broker:
-      properties:
-        broker.rack: dc2
-        client.rack: dc2 #Used for License topic consumption
     
 control_center:
-  hosts:
-    ccc1.dc1.nikoleta.aws.ps.confluent.io:
-  vars:
-    control_center:
-      properties:
-        client.rack: dc1
+  children:
+    control_center_dc1:
     
 schema_registry:
   children:
     schema_registry_dc1:
     schema_registry_dc2:
-       
-schema_registry_dc1:
-  hosts:
-    sr1.dc1.nikoleta.aws.ps.confluent.io:
-  vars:
-    schema_registry: 
-      properties:
-        client.rack: dc1 # Neither of these appear to work currently
-        kafkastore.client.rack: dc1
-       
-schema_registry_dc2:
-  hosts:
-    sr1.dc2.nikoleta.aws.ps.confluent.io:
-  vars:
-    schema_registry:
-      properties:
-        client.rack: dc2 # Neither of these appear to work currently
-        kafkastore.client.rack: dc2
-                  
+    
 kafka_connect:
   children:
     kafka_connect_dc1:
     kafka_connect_dc2:
-                  
-kafka_connect_dc1:
-  hosts:
-    connect1.dc1.nikoleta.aws.ps.confluent.io:
-  vars:
-    kafka_connect:
-      properties:
-        client.rack: dc1
-        consumer.client.rack: dc1
-                  
-kafka_connect_dc2:
-  hosts:
-    connect1.dc2.nikoleta.aws.ps.confluent.io:
-  vars:
-    kafka_connect:
-      properties:
-        client.rack: dc2
-        consumer.client.rack: dc2
-                      
+    
 ksql:
   children:
     ksql_dc1:
     ksql_dc2:
-                  
-ksql_dc1:
-  hosts:
-    ksql1.dc1.nikoleta.aws.ps.confluent.io:
-  vars:
-    ksql:
-      properties:
-        client.rack: dc1 
-        ksql.streams.consumer.client.rack: dc1
-                  
-ksql_dc2:
-  hosts:
-    ksql1.dc2.nikoleta.aws.ps.confluent.io:
-  vars:
-    ksql:
-      properties:
-        client.rack: dc2
-        ksql.streams.consumer.client.rack: dc2
-      
+
 kafka_rest:
   children:
     kafka_rest_dc1:
     kafka_rest_dc2:
+
+dc1:
+  children:
+    zookeeper_dc1:
+      hosts:
+        zk1.dc1.nikoleta.aws.ps.confluent.io:
+    kafka_broker_dc1:
+      hosts:
+        kfk[1:3].dc1.nikoleta.aws.ps.confluent.io:
+    control_center_dc1:
+      hosts:
+        ccc1.dc1.nikoleta.aws.ps.confluent.io:
+      vars:
+        confluent_repo_version: 5.5 #Optional
+        confluent_package_version: 5.5.0 #Optional
+    schema_registry_dc1:
+      hosts:
+        sr1.dc1.nikoleta.aws.ps.confluent.io:
+    kafka_connect_dc1:
+      hosts:
+        connect1.dc1.nikoleta.aws.ps.confluent.io:
+    ksql_dc1:
+      hosts:
+        ksql1.dc1.nikoleta.aws.ps.confluent.io:
+    kafka_rest_dc1:
+      hosts:
+        rest1.dc1.nikoleta.aws.ps.confluent.io:
+        
+dc2:
+  children:
+    zookeeper_dc2:
+      hosts:
+        zk1.dc2.nikoleta.aws.ps.confluent.io:
+    kafka_broker_dc2:
+      hosts:
+        kfk[1:3].dc2.nikoleta.aws.ps.confluent.io:
+    schema_registry_dc2:
+      hosts:
+        sr1.dc2.nikoleta.aws.ps.confluent.io:
+    kafka_connect_dc2:
+      hosts:
+        connect1.dc2.nikoleta.aws.ps.confluent.io:
+    ksql_dc2:
+      hosts:
+        ksql1.dc2.nikoleta.aws.ps.confluent.io:
+    kafka_rest_dc2:
+      hosts:
+        rest1.dc2.nikoleta.aws.ps.confluent.io:
+        
+dc3:
+  children:
+    zookeeper_dc3:
+      hosts:
+        zk1.dc3.nikoleta.aws.ps.confluent.io:
+    
+
+     
+
+     
+
+    
+
+    
+
+       
+
+       
+
                   
-kafka_rest_dc1:
-  hosts:
-    rest1.dc1.nikoleta.aws.ps.confluent.io:
-  vars:
-    kafka_rest:
-      properties:
-        client.rack: dc1 #Currently Unsure
+
                   
-kafka_rest_dc2:
-  hosts:
-    rest1.dc2.nikoleta.aws.ps.confluent.io:
-  vars:
-    kafka_rest:
-      properties:
-        client.rack: dc2 #Currently Unsure
+
+                  
+
+                      
+
+                  
+
+                  
+
+      
+
+                  
+
+                  
+

@@ -1,0 +1,147 @@
+---
+- name: Roll Host Certs
+  hosts: all
+  become: yes
+  tags: roll_certs
+  var:
+    service_name: 
+    working_dir: 
+    cert_path: 
+    key_path: 
+    ca_cert_path: 
+    truststore_path: 
+    truststore_storepass:
+    keystore_path:
+    keystore_keypass: 
+    keystore_storepass: 
+    old_postfix: ".old"
+    new_postfix: ".new"
+  tasks:
+  #Check that we have new Certs/Keys to add
+  - name: Checking if new CRT available
+    stat:
+      path: cert_path
+    register: cert_stat
+  - name: Checking if new Key available
+    stat:
+      path: key_path
+    register: key_stat
+    
+  #Build out new Truststore and Keystores
+  - name: Create Truststore and Import the CA Cert
+    shell: |
+      keytool -noprompt -keystore {{truststore_path}}{{new_postfix}} \
+        -storetype pkcs12 \
+        -alias CARoot \
+        -import -file {{ca_cert_path}} \
+        -storepass {{truststore_storepass}} \
+        -keypass {{truststore_storepass}} {{extra_args}}
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  
+  - name: Put Key and Signed Cert into pkcs12 Format with Key Password
+    shell: |
+      openssl pkcs12 -export \
+        -in {{cert_path}} \
+        -inkey {{key_path}} \
+        -passin pass:{{keystore_keypass}} \
+        -out "{{working_dir}}/client.p12" \
+        -name kafkassl \
+        -passout pass:mykeypassword
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  
+  - name: Put Key and Signed Cert into pkcs12 Format without Key Password
+    shell: |
+      openssl pkcs12 -export \
+        -in {{cert_path}} \
+        -inkey {{key_path}} \
+        -out "{{working_dir}}/client.p12" \
+        -name kafkassl \
+        -passout pass:mykeypassword
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  
+  - name: Create Keystore
+    shell: |
+      keytool -importkeystore \
+        -srckeystore "{{working_dir}}/client.p12" \
+        -srcstoretype pkcs12 \
+        -srcstorepass mykeypassword \
+        -destkeystore {{keystore_path}}{{new_postfix}} \
+        -deststoretype pkcs12 \
+        -deststorepass {{keystore_storepass}} \
+        -destkeypass {{keystore_storepass}} {{extra_args}}
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  
+  - name: Import the CA Cert into Keystore
+    shell: |
+      keytool -noprompt -keystore {{keystore_path}}{{new_postfix}} \
+        -storetype pkcs12 \
+        -keyalg RSA \
+        -alias CARoot \
+        -import -file {{ca_cert_path}} \
+        -storepass {{keystore_storepass}} \
+        -keypass {{keystore_storepass}} {{extra_args}}
+    when: cert_stat.stat.exists and key_stat.stat.exists
+        
+  #Stop and Swap
+  - name: Deleting old keystore
+    file:
+      path: "{{keystore_path}}{{old_postfix}}"
+      state: absent
+  - name: Deleting old truststure
+    file:
+      path: "{{truststore_path}}{{old_postfix}}"
+      state: absent
+      
+  - name: "Stopping {{service_name}}"
+    systemd:
+      name: "{{service_name}}"
+      state: stopped
+    when: cert_stat.stat.exists and key_stat.stat.exists
+    
+  - name: Swapping Keystores - Current to Old
+    command: "mv {{keystore_path}} {{keystore_path}}{{old_postfix}}"
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  - name: Swapping Keystores - New to Current
+    command: "mv {{keystore_path}}{{new_postfix}} {{keystore_path}}"
+    when: cert_stat.stat.exists and key_stat.stat.exists
+    
+  - name: Swapping Truststores - Current to Old
+    command: "mv {{truststore_path}} {{truststore_path}}{{old_postfix}}"
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  - name: Swapping Truststores - New to Current
+    command: "mv {{truststore_path}}{{new_postfix}} {{truststore_path}}"
+    when: cert_stat.stat.exists and key_stat.stat.exists
+      
+  - name: "Stopping {{service_name}}"
+    systemd:
+      name: "{{service_name}}"
+      state: started
+    when: cert_stat.stat.exists and key_stat.stat.exists
+    
+  #Cleanup
+  - name: Deleting old cert
+    file:
+      path: "{{cert_path}}{{old_postfix}}"
+      state: absent
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  - name: Archiving Cert
+    command: "mv {{cert_path}} {{cert_path}}{{old_postfix}}"
+    when: cert_stat.stat.exists and key_stat.stat.exists
+    
+  - name: Deleting old key
+    file:
+      path: "{{key_path}}{{old_postfix}}"
+      state: absent
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  - name: Archiving Key
+    command: "mv {{key_path}} {{key_path}}{{old_postfix}}"
+    when: cert_stat.stat.exists and key_stat.stat.exists
+    
+  - name: Deleting old CA
+    file:
+      path: "{{ca_cert_path}}{{old_postfix}}"
+      state: absent
+    when: cert_stat.stat.exists and key_stat.stat.exists
+  - name: Archiving CA
+    command: "mv {{ca_cert_path}} {{ca_cert_path}}{{old_postfix}}"
+    when: cert_stat.stat.exists and key_stat.stat.exists

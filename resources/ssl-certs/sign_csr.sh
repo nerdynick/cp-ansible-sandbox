@@ -1,0 +1,1 @@
+../../keystore-scripts/src/main/bash/sign_csr.sh

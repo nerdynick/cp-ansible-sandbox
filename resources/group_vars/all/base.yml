@@ -12,6 +12,7 @@ install_netcat: false #Defaults to true
 install_java: true #Disable if you wish to get Java from elsewhere
 jolokia_enabled: true #Disables Jolokia download/install
 jmxexporter_enabled: true #Enable to install Prometheus
+kafka_broker_configure_additional_brokers: false #This appears to be a regression in 5.5. We are defaulting to true now for some reason.
 kafka_broker_default_listeners: 
   external:
     hostname: "{{inventory_hostname}}" #Set the Advertised Name
@@ -23,7 +24,12 @@ zookeeper_data_dir: /var/lib/zookeeper
 zookeeper:
   log_path: /var/log/kafka/
   properties:
-    '4lw.commands.whitelist': "stat, ruok, srvr, mntr" #Optional, this enables the 4 primary 4 letter words
+    # Optional, this enables the 4 primary 4 letter words. 
+    # By default only `srvr` is enabled. `*` can be used to enable all commands.
+    # Do note the ' around the key. This is required by YAML since it starts with a number not a letter.
+    '4lw.commands.whitelist': "stat, ruok, srvr, mntr" 
+    tcpKeepAlive: 'true' #Assist with a little better network stability
+    
       
 #Broker Vars
 kafka_broker_service_environment_overrides:

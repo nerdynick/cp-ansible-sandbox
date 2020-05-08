@@ -1,1 +1,0 @@
-../../keystore-scripts/src/main/bash/create_crt.sh
