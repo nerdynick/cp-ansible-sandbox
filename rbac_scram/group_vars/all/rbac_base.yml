@@ -1,45 +1,91 @@
-control_center_kafka_listener_name: rbac
-schema_registry_kafka_listener_name: external #rbac
-kafka_connect_kafka_listener_name: external #rbac
+control_center_kafka_listener_name: internal
+schema_registry_kafka_listener_name: external
+kafka_connect_kafka_listener_name: external
+
+kafka_broker_configure_additional_brokers: true
+kafka_broker_default_listeners:
+  internal:
+    sasl_protocol: OAUTH
+    port: 9093 #I prefer to personally have any internal trafic on non-common ports. So I change it.
+  external:
+    name: EXTERNAL
+    port: 9092
+kafka_broker_custom_listeners:
+  broker:
+    name: BROKER
+    port: 9091
 
 rbac_enabled: true
+rbac_mds_public_key_path: "/var/ssl/private/public.pem"
+rbac_mds_private_key_path: "/var/ssl/private/tokenKeypair.pem"
 
-#START: These are custom variables used below. They are not part of CP-Ansible at this time
-rbac_mds_public_key_filepath: pem/public.pem
-rbac_mds_private_key_filepath: pem/tokenKeypair.pem
-rbac_mds_public_key_filename: public.pem
-rbac_mds_private_key_filename: tokenKeypair.pem
-rbac_mds_public_key_path: "/var/ssl/private/{{rbac_mds_public_key_filename}}"
-rbac_mds_private_key_path: "/var/ssl/private/{{rbac_mds_private_key_filename}}"
+
+#START: 5.4 Only. 
+# These are custom variables used below. They are not part of CP-Ansible at this time
+#rbac_mds_public_key_filepath: pem/public.pem
+#rbac_mds_private_key_filepath: pem/tokenKeypair.pem
+#
+#kafka_broker_configure_additional_brokers: true #The following 3 sets are needed to provide proper advertisment
+#kafka_broker_inter_broker_listener_name: internal #Ensure we don't use the OAUTH/RBAC listener we enable
+#kafka_broker_custom_listeners:
+#  rbac:
+#    name: RBAC
+#    port: 9093
+#    ssl_enabled: true
+#    ssl_mutual_auth_enabled: "{{ ssl_mutual_auth_enabled }}"
+#    sasl_protocol: OAUTHBEARER
+#    server_callback: io.confluent.kafka.server.plugins.auth.token.TokenBearerValidatorCallbackHandler
+#    login_callback: io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
+#    options:
+#      publicKeyPath: "{{ rbac_mds_public_key_path }}"
+#    hostname: "{{inventory_hostname}}"
 #END
 
-kafka_broker_configure_additional_brokers: true #The following 3 sets are needed to provide proper advertisment
-kafka_broker_inter_broker_listener_name: internal #Ensure we don't use the OAUTH/RBAC listener we enable
-kafka_broker_custom_listeners: 
-  rbac:
-    name: RBAC
-    port: 9093
-    ssl_enabled: true
-    ssl_mutual_auth_enabled: "{{ ssl_mutual_auth_enabled }}"
-    sasl_protocol: OAUTHBEARER
-    server_callback: io.confluent.kafka.server.plugins.auth.token.TokenBearerValidatorCallbackHandler
-    login_callback: io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
-    options:
-      publicKeyPath: "{{ rbac_mds_public_key_path }}"
-    hostname: "{{inventory_hostname}}"
+#START Ansible 5.5+ Only
+mds_super_user: nikoleta-kfk1
+mds_super_user_password: "{{vault_service_account_password}}"
+
+kafka_broker_principal: admin #This can be defined once globally or seperatly on each brokers vars
+
+schema_registry_ldap_user: nikoleta-kfk1
+schema_registry_ldap_password: "{{vault_service_account_password}}"
+kafka_connect_ldap_user: nikoleta-kfk1
+kafka_connect_ldap_password: "{{vault_service_account_password}}"
+ksql_ldap_user: nikoleta-kfk1
+ksql_ldap_password: "{{vault_service_account_password}}"
+kafka_rest_ldap_user: nikoleta-kfk1
+kafka_rest_ldap_password: "{{vault_service_account_password}}"
+control_center_ldap_user: nikoleta-kfk1
+control_center_ldap_password: "{{vault_service_account_password}}"
+
+create_mds_certs: false
+token_services_public_pem_file: pem/public.pem
+token_services_private_pem_file: pem/tokenKeypair.pem
+
+ldap_config: "" # 5.5 Adds this var as 1 big multiline string. I think this is gross. So I define all my configs using the tradition properties route.  
+#END
+
+
     
 kafka_broker:
   properties:
     #MDS - RBAC Configurations
-    authorizer.class.name: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
     confluent.authorizer.access.rule.providers: ZK_ACL,CONFLUENT #Enable both Centralized ZK ACLs and RBAC
     #MDS - MDS & LDAP Configs
-    super.users: User:admin;User:nikoleta-kfk1;User:nikoleta-kfk2;User:nikoleta
-    broker.users: User:admin
-    confluent.metadata.server.authentication.method: BEARER
-    confluent.metadata.server.public.key.path: "{{rbac_mds_public_key_path}}"
-    confluent.metadata.server.token.key.path: "{{rbac_mds_private_key_path}}"
-    confluent.metadata.server.token.max.lifetime.ms: 3600000
+    #Users:
+    #  User:admin - This is a SCRAM user that the internal broker communications will use
+    #  User:nikoleta-kfk1 & User:nikoleta-kfk2 are system account/client from LDAP that other components will use
+    #  User:nikoleta is an LDAP provided user. In this case a User not a Client.
+    #
+    #START Ansible 5.4.x reguires you to define the super users this way
+    #super.users: User:admin;User:nikoleta-kfk1;User:nikoleta-kfk2;User:nikoleta
+    #broker.users: User:admin
+    #confluent.metadata.server.authentication.method: BEARER
+    #confluent.metadata.server.public.key.path: "{{rbac_mds_public_key_path}}"
+    #confluent.metadata.server.token.key.path: "{{rbac_mds_private_key_path}}"
+    #confluent.metadata.server.token.max.lifetime.ms: 3600000
+    #END
+    #
     #Sometimes you'll get the error "javax.naming.PartialResultException: Unprocessed Continuation Reference(s);" Changing the port can help.
     #  If you were using the port 389 change it to 3268
     #  If you were using the port 636 change it to 3269

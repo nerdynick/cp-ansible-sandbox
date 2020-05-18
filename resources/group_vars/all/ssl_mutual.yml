@@ -1,29 +1,7 @@
-all_ssl_password: "{{vault_ssl_password}}" #Custom to these script to access vault simplier
-pkcs12_enabled: false #Optional to use PKSC12 over JKS
-ssl_custom_certs: false #Set to true to provide your own certs & keys. Provide the following properties.
-#      ssl_ca_cert_filepath: 
-#      ssl_signed_cert_filepath:
-#      ssl_key_filepath: 
-ssl_provided_keystore_and_truststore: true #If true provide the keystores
-ssl_keystore_filepath: "ssl-certs/{{inventory_hostname}}.keystore.jks"
-ssl_keystore_key_password: "{{all_ssl_password}}"
-ssl_keystore_store_password: "{{all_ssl_password}}"
-ssl_truststore_filepath: "ssl-certs/{{inventory_hostname}}.truststore.jks"
-ssl_truststore_password: "{{all_ssl_password}}"
 kafka_broker_default_listeners: 
-   external:
-      name: EXTERNAL
-      port: 9092
-      ssl_enabled: true #SSL can be enabled directly here or by defining ssl_enabled globally
+   internal:
       ssl_mutual_auth_enabled: true #Must be true in order for ansible to place/enable all the SSL Keystore
-      sasl_protocol: none
-      hostname: "{{inventory_hostname}}" #How to set an advertised listener host for this. Downside this also sets the host in the host bind.
-control_center_ssl_enabled: true
-ksql_ssl_enabled: true
-kafka_connect_ssl_enabled: true
-kafka_rest_ssl_enabled: true
-schema_registry_ssl_enabled: true
-
+      
 kafka_broker:
   properties:
     ssl.client.auth: required #Forces all clients to auth via SSL/TLS trust

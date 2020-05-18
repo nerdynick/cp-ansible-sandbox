@@ -1,0 +1,81 @@
+---
+- name: Host Prerequisites
+  hosts: zookeeper:kafka_broker:schema_registry:kafka_connect:ksql:control_center:kafka_rest
+  tags:
+    - preflight
+  tasks:
+  - import_role:
+      name: confluent.common
+#This is needed for 5.4 based installs
+#  - name: Creating Folder for Private
+#    file:
+#      path: /var/ssl/private
+#      state: directory
+#      mode: 0755
+#    become: yes
+#  - name: Copy MDS Public Key to Host
+#    copy:
+#      src: "{{rbac_mds_public_key_filepath}}"
+#      dest: "{{rbac_mds_public_key_path}}"
+#    become: yes
+
+- name: Zookeeper Provisioning
+  hosts: zookeeper
+  tags:
+    - zookeeper
+  tasks:
+  - import_role:
+      name: confluent.zookeeper
+
+- name: Kafka Broker Provisioning
+  hosts: kafka_broker
+  tags:
+    - kafka_broker
+  tasks:
+#This is needed for 5.4 based installs
+#  - name: Copy MDS Private Key to Host
+#    copy:
+#      src: "{{rbac_mds_private_key_filepath}}"
+#      dest: "{{rbac_mds_private_key_path}}"
+  - import_role:
+      name: confluent.kafka_broker
+
+- name: Schema Registry Provisioning
+  hosts: schema_registry
+  tags:
+    - schema_registry
+  tasks:
+  - import_role:
+      name: confluent.schema_registry
+
+- name: Kafta Connect Provisioning
+  hosts: kafka_connect
+  tags:
+    - kafka_connect
+  tasks:
+  - import_role:
+      name: confluent.kafka_connect
+
+- name: KSQL Provisioning
+  hosts: ksql
+  tags:
+    - ksql
+  tasks:
+  - import_role:
+      name: confluent.ksql
+
+- name: Kafka Rest Provisioning
+  hosts: kafka_rest
+  tags:
+    - kafka_rest
+  tasks:
+  - import_role:
+      name: confluent.kafka_rest
+
+- name: Control Center Provisioning
+  hosts: control_center
+  tags:
+    - control_center
+  tasks:
+  - import_role:
+      name: confluent.control_center

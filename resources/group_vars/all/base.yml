@@ -1,7 +1,7 @@
 #Global Vars
 ansible_become: true
 confluent_repo_version: 5.4 #Optional
-confluent_package_version: 5.4.1 #Optional
+confluent_package_version: 5.4.2 #Optional
 #confluent_package_redhat_suffix: "" #Needed for doing <5.3 installs
 #confluent_package_debian_suffix: "" #Needed for doing <5.3 installs
 confluent:
