@@ -15,13 +15,16 @@ cd $PROJECT_DIR
 cp -nR ../.ansible-skeleton/* ./
 
 #Copy basics from cp-ansible
-cp -n ../../cp-ansible/all.yml main.yml
+cp -n ../../cp-ansible/*.yml ./
+cp -n ../../cp-ansible/*.cfg ./
+rm hosts_example.yml
 
 #SymLink/Copy base into playbook scope
 ln -fs ../.ansible-base/* ./
 
 #Add and make 1st commit
-#git add ./*
-#git commit -m"Initial Example Build Out"
+#git checkout -b $PROJECT_DIR
+git add ./*
+git commit -m"Initial Example Build Out for $PROJECT_DIR"
 
 echo "Done"

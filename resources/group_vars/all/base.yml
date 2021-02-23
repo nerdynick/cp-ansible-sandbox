@@ -1,79 +1,67 @@
 #Global Vars
 ansible_become: true
-proxy_env: {}
 
-# To control what version is install. Adjust the following. 
-# This works for 5.3+, for <5.3 See resources/snipits/legacy_install.yml.
-#confluent_repo_version: 5.5 #Optional
-#confluent_package_version: 5.5.1 #Optional
+#If you need to change the user for whatever reason
+#ansible_user: ubuntu
+#ansible_ssh_user: ubuntu
 
-confluent:
-   support:
-      metrics_enabled: false
-      customer_id: ""
-install_netcat: false #Defaults to true
+#EXAMPLE Proxy settings
+# proxy_env:
+#   http_proxy: http://proxy.example.com
+#   https_proxy: https://proxy.example.com
+#   no_proxy: .example.com
+
+# To control what version is install. Adjust the following.
+#confluent_repo_version: 6.0
+#confluent_package_version: 6.0.2
+
+# Monitoring Settings
 install_java: true #Disable if you wish to get Java from elsewhere
 jolokia_enabled: true #Disables Jolokia download/install
 jmxexporter_enabled: true #Enable to install Prometheus
-kafka_broker_configure_additional_brokers: false #This appears to be a regression in 5.5. We are defaulting to true now for some reason.
-kafka_broker_default_listeners: 
-  internal:
-    hostname: "{{inventory_hostname}}" #Set the Advertised Name
 
-#Zookeeper Vars
-zookeeper_data_dir: /var/lib/zookeeper
-zookeeper:
-  log_path: /var/log/kafka/
-  properties:
-    # Optional, this enables the 4 primary 4 letter words. 
-    # By default only `srvr` is enabled. `*` can be used to enable all commands.
-    # Do note the ' around the key. This is required by YAML since it starts with a number not a letter.
-    '4lw.commands.whitelist': "stat, ruok, srvr, mntr" 
-    tcpKeepAlive: 'true' #Assist with a little better network stability
-    
-      
-#Broker Vars
-kafka_broker_service_environment_overrides:
-  KAFKA_HEAP_OPTS: "-Xmx1g"
+#Global Security
+sasl_protocol: none
+ssl_enabled: false
+ssl_mutual_auth_enabled: false
+
+#Global Settings
+default_internal_replication_factor: 3
+
+#Zookeeper Overrides
+zookeeper_custom_properties:
+  # Optional, this enables the 4 primary 4 letter words. 
+  # By default only `srvr` is enabled. `*` can be used to enable all commands.
+  # Do note the ' around the key. This is required by YAML since it starts with a number not a letter.
+  '4lw.commands.whitelist': "stat, ruok, srvr, mntr" 
+  tcpKeepAlive: 'true' #Assist with a little better network stability
+
+#Confluent Server/Kafka Brokers Overrides
 kafka_broker:
   datadir:
   - /var/lib/kafka/data
-  properties:
-    num.partitions: 3
-    min.insync.replicas: 2
-    log.retention.hours: 3 #Adjust to desired value. Set low for test envs.
-    default.replication.factor: 3
-    #MetricsReport Specific Configs
-    confluent.metrics.reporter.topic.partitions: 12
-    confluent.metrics.reporter.topic.replicas: 3
-    confluent.metrics.reporter.topic.retention.ms: 10800000 #Adjust to desired value. Set low for test envs. 
-            
-#Control Center Vars
+
+kafka_broker_custom_properties:
+  confluent.support.metrics.enable: "false" #OPTIONAL: This disables remote metrics reporting. By default this is enabled.
+  confluent.support.customer.id: anonymous #OPTIONAL: This is the default value. This is strictly here for documentation sake.
+  default.replication.factor: 3 # Default is currently 1
+  min.insync.replicas: 2 # Default is currently 1
+  log.retention.hours: 3 # IGNORE: Adjusted for use in my small VMs. 
+  confluent.metrics.reporter.topic.retention.ms: 10800000 #IGNORE: Adjusted low for test envs. 
+  
+kafka_broker_service_environment_overrides:
+  #IGNORE: The HEAP size is lowered here to handle the smaller VMs I launch this on
+  KAFKA_HEAP_OPTS: "-Xms1g -Xmx4g -XX:MetaspaceSize=96m -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M -XX:MinMetaspaceFreeRatio=50 -XX:MaxMetaspaceFreeRatio=80"
+
+#Control Center Overrides
+control_center_log_dir: /var/lib/confluent/control-center
 control_center_rocksdb_path: "/var/lib/confluent/control-center/rocksdb"
-#control_center_custom_java_args: " -Djava.io.tmpdir=/tmp"
-control_center:
-  data_dir_path: /var/lib/confluent/control-center
-  properties:
-    confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers
-    confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
-    confluent.controlcenter.command.topic.replication: 3
-    confluent.controlcenter.internal.topics.replication: 3
-    confluent.metrics.topic.replication: 3
-    confluent.monitoring.interceptor.topic.replication: 3
+control_center_custom_properties: {}
+  # confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers
+  # confluent.controlcenter.schema.registry.enable: 'true' # Set to false if no Schema Registry
 
-schema_registry:
-  properties:
-    schema.registry.group.id: schema-registry
-    kafkastore.group.id: schema-registry
-    master.eligibility: 'true'
-    
-kafka_connect:
-  properties:
-    rest.advertised.host.name: "{{inventory_hostname}}"
+#ksqlDB Overrides
 
-ksql:
-  properties:
-    ksql.internal.topic.replicas: 3
-    ksql.streams.replication.factor: 3
-    ksql.streams.num.standby.replicas: 1
-    
+#Schema Registry Overrides
+schema_registry_custom_properties: {}
+  # master.eligibility: 'true'
