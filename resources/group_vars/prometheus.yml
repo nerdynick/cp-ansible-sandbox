@@ -1,0 +1,48 @@
+prometheus_binary_local_dir: prometheus-2.20.1.linux-amd64
+#prometheus_db_dir: ""
+prometheus_storage_retention: "30d"
+prometheus_scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: 
+      - "localhost:9090"
+
+  - job_name: "zookeeper"
+    static_configs:
+    - targets:
+      - "zk01.nikoleta.aws.ps.confluent.io:8079"
+      - "zk02.nikoleta.aws.ps.confluent.io:8079"
+      - "zk03.nikoleta.aws.ps.confluent.io:8079"
+      labels:
+        env: dev
+        component: zookeeper
+        cluster: main
+
+  - job_name: "kafka"
+    static_configs:
+    - targets:
+      - "kfk01.nikoleta.aws.ps.confluent.io:8080"
+      - "kfk02.nikoleta.aws.ps.confluent.io:8080"
+      - "kfk03.nikoleta.aws.ps.confluent.io:8080"
+      labels:
+        env: dev
+        component: kafka
+        cluster: main
+
+  - job_name: "schemaregistry"
+    static_configs:
+    - targets:
+      - "sr01.nikoleta.aws.ps.confluent.io:8078"
+      labels:
+        env: dev
+        component: schemaregistry
+
+  - job_name: "connect"
+    static_configs:
+    - targets:
+      - "connect01.nikoleta.aws.ps.confluent.io:8077"
+      labels:
+        env: dev
+        component: connect
+        cluster: cluster01
+

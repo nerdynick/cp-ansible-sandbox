@@ -1,9 +1,0 @@
-{% for module in modules %}
-{{module.name}} {
-    {{module.modules}} required
-    {% for key,value in module.pairs.items() %}
-    {{key}}={{value}}
-    {% endfor %}
-};
-
-{% endfopr %}

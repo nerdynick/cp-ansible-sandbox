@@ -1,0 +1,10 @@
+grafana_security: 
+  admin_user: admin
+  admin_password: admin
+grafana_datasources:
+- url: "http://{{ ansible_host }}:9090"
+  name: Prometheus
+  type: prometheus
+  is_default: true
+grafana_plugins:
+  - grafana-piechart-panel

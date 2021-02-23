@@ -1,3 +1,0 @@
-kafka_broker:
-  properties:
-    replica.selector.class: org.apache.kafka.common.replica.RackAwareReplicaSelector #Make everyone rack aware for replica placements

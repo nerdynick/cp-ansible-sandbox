@@ -1,9 +1,12 @@
 #Global Vars
 ansible_become: true
-confluent_repo_version: 5.4 #Optional
-confluent_package_version: 5.4.2 #Optional
-#confluent_package_redhat_suffix: "" #Needed for doing <5.3 installs
-#confluent_package_debian_suffix: "" #Needed for doing <5.3 installs
+proxy_env: {}
+
+# To control what version is install. Adjust the following. 
+# This works for 5.3+, for <5.3 See resources/snipits/legacy_install.yml.
+#confluent_repo_version: 5.5 #Optional
+#confluent_package_version: 5.5.1 #Optional
+
 confluent:
    support:
       metrics_enabled: false
@@ -16,8 +19,6 @@ kafka_broker_configure_additional_brokers: false #This appears to be a regressio
 kafka_broker_default_listeners: 
   internal:
     hostname: "{{inventory_hostname}}" #Set the Advertised Name
-    
-ansible_become: true
 
 #Zookeeper Vars
 zookeeper_data_dir: /var/lib/zookeeper

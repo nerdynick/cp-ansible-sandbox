@@ -1,0 +1,30 @@
+zookeeper:
+  hosts:
+    zk[01:03].nikoleta.aws.ps.confluent.io:
+     
+kafka_broker:
+  hosts:
+    kfk[01:03].nikoleta.aws.ps.confluent.io:
+    
+control_center:
+  hosts:
+    ccc01.nikoleta.aws.ps.confluent.io:
+       
+schema_registry:
+  hosts:
+    sr[01:02].nikoleta.aws.ps.confluent.io:
+                  
+kafka_connect:
+  hosts:
+    connect1:
+      ansible_host: connect01.nikoleta.aws.ps.confluent.io
+    connect2:
+      ansible_host: connect02.nikoleta.aws.ps.confluent.io
+                      
+ksql:
+  hosts:
+    ksql01.nikoleta.aws.ps.confluent.io:
+      
+kafka_rest:
+  hosts:
+    rest01.nikoleta.aws.ps.confluent.io:

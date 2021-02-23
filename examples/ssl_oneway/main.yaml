@@ -1,0 +1,69 @@
+- name: Host Provisioning
+  hosts: zookeeper:kafka_broker:schema_registry:kafka_connect:ksql:control_center:kafka_rest
+  tags: preflight
+  tasks:
+  - import_role:
+      name: confluent.variables_handlers
+  - import_role:
+      name: confluent.common
+    become: yes
+    
+- name: Zookeeper Provisioning
+  hosts: zookeeper
+  tags: zookeeper
+  pre_tasks:
+  tasks:
+  - import_role:
+      name: confluent.zookeeper
+    become: yes
+    
+- name: Kafka Broker Provisioning
+  hosts: kafka_broker
+  tags: kafka_broker
+  tasks:
+  - import_role:
+      name: confluent.kafka_broker
+    become: yes
+    
+- name: Control Center Provisioning
+  hosts: control_center
+  tags: control_center
+  tasks:
+  - import_role:
+      name: confluent.control_center
+    become: yes
+    
+- name: Kafka Connect Provisioning
+  hosts: kafka_connect_ssl
+  tags: kafka_connect
+  tasks:
+  - import_role:
+      name: confluent.kafka_connect
+    become: yes
+
+- name: Schema Registry Provisioning
+  hosts: schema_registry_ssl
+  tags:
+    - schema_registry
+  tasks:
+  - import_role:
+      name: confluent.schema_registry
+    become: yes
+      
+- name: KSQL Provisioning
+  hosts: ksql_ssl
+  tags:
+    - ksql
+  tasks:
+  - import_role:
+      name: confluent.ksql
+    become: yes
+      
+- name: Kafka Rest Provisioning
+  hosts: kafka_rest
+  tags:
+    - kafka_rest
+  tasks:
+  - import_role:
+      name: confluent.kafka_rest
+    become: yes

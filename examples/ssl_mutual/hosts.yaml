@@ -1,0 +1,28 @@
+zookeeper:
+   hosts:
+      zk[1:3].confluent.nerdynick.net:
+         
+kafka_broker:
+   hosts:
+      kfk[1:3].confluent.nerdynick.net:
+            
+control_center:
+   hosts:
+      ccc1.confluent.nerdynick.net:
+      
+kafka_connect:
+   hosts:
+      con1.confluent.nerdynick.net:
+                  
+schema_registry:
+   hosts:
+      sr1.confluent.nerdynick.net:
+      
+ksql_ssl:
+   hosts:
+      ksql1.confluent.nerdynick.net:
+      
+kafka_rest:
+   hosts:
+      rest1.confluent.nerdynick.net:
+            

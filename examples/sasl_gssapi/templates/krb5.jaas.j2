@@ -1,0 +1,7 @@
+{{name}} {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useKeyTab=true
+    storeKey=true
+    keyTab="/etc/security/keytabs/{{keytab_file}}"
+    principal="{{spn}}";
+};
