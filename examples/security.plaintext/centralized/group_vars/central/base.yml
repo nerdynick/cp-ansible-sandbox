@@ -1,0 +1,6 @@
+default_internal_replication_factor: 1
+
+#Confluent Server/Kafka Brokers Overrides
+kafka_broker_custom_properties:
+  default.replication.factor: 1
+  min.insync.replicas: 1

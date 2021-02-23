@@ -1,0 +1,67 @@
+zookeeper:
+  children:
+    zookeeper_main:
+    zookeeper_central:
+    zookeeper_dc3:
+    
+kafka_broker:
+  children:
+    kafka_broker_main:
+    kafka_broker_central:
+    
+control_center:
+  children:
+    control_center_central:
+    
+schema_registry:
+  children:
+    schema_registry_main:
+    schema_registry_central:
+    
+kafka_connect:
+  children:
+    kafka_connect_main:
+    kafka_connect_central:
+    
+ksql:
+  children:
+    ksql_main:
+    ksql_central:
+
+kafka_rest:
+  children:
+    kafka_rest_main:
+    kafka_rest_central:
+
+main:
+  children:
+    zookeeper_main:
+      hosts:
+        zk[01:03].main.nikoleta.aws.ps.confluent.io:
+    kafka_broker_main:
+      hosts:
+        kfk[01:03].main.nikoleta.aws.ps.confluent.io:
+    schema_registry_main:
+      hosts:
+        sr01.main.nikoleta.aws.ps.confluent.io:
+    kafka_connect_main:
+      hosts:
+        connect01.main.nikoleta.aws.ps.confluent.io:
+    ksql_main:
+      hosts:
+        ksql01.main.nikoleta.aws.ps.confluent.io:
+    kafka_rest_main:
+      hosts:
+        rest01.main.nikoleta.aws.ps.confluent.io:
+        
+central:
+  children:
+    zookeeper_central:
+      hosts:
+        zk01.central.nikoleta.aws.ps.confluent.io:
+    kafka_broker_central:
+      hosts:
+        kfk01.central.nikoleta.aws.ps.confluent.io:
+    control_center_central:
+      hosts:
+        ccc01.central.nikoleta.aws.ps.confluent.io:
