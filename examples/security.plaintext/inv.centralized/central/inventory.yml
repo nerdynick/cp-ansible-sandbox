@@ -1,0 +1,15 @@
+zookeeper:
+  children:
+    zookeeper_central:
+    
+kafka_broker:
+  children:
+    kafka_broker_central:
+    
+control_center:
+  children:
+    control_center_central:
+    
+schema_registry:
+  children:
+    schema_registry_main: #NOTICE: We declare this here in order to get all the ENVs to share a commin SR cluster that happens to also be that hosted in the main infrastructure

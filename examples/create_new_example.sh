@@ -24,7 +24,7 @@ ln -fs ../.ansible-base/* ./
 
 #Add and make 1st commit
 #git checkout -b $PROJECT_DIR
-git add ./*
-git commit -m"Initial Example Build Out for $PROJECT_DIR"
+#git add ./*
+#git commit -m"Initial Example Build Out for $PROJECT_DIR"
 
 echo "Done"

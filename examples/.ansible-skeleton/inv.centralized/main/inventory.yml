@@ -1,0 +1,23 @@
+zookeeper:
+  children:
+    zookeeper_main:
+    
+kafka_broker:
+  children:
+    kafka_broker_main:
+    
+schema_registry:
+  children:
+    schema_registry_main:
+    
+kafka_connect:
+  children:
+    kafka_connect_main:
+    
+ksql:
+  children:
+    ksql_main:
+
+kafka_rest:
+  children:
+    kafka_rest_main:

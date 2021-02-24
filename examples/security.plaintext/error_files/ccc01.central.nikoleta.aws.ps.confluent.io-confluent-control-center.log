@@ -1,0 +1,7 @@
+-- Logs begin at Tue 2021-02-23 17:31:43 UTC, end at Tue 2021-02-23 23:50:49 UTC. --
+Feb 23 23:42:54 ip-172-30-23-79 systemd[1]: Started Confluent Control Center.
+Feb 23 23:42:55 ip-172-30-23-79 control-center-start[21977]: SLF4J: Class path contains multiple SLF4J bindings.
+Feb 23 23:42:55 ip-172-30-23-79 control-center-start[21977]: SLF4J: Found binding in [jar:file:/usr/share/java/acl/acl-6.1.0.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+Feb 23 23:42:55 ip-172-30-23-79 control-center-start[21977]: SLF4J: Found binding in [jar:file:/usr/share/java/confluent-control-center/slf4j-log4j12-1.7.30.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+Feb 23 23:42:55 ip-172-30-23-79 control-center-start[21977]: SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+Feb 23 23:42:55 ip-172-30-23-79 control-center-start[21977]: SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]

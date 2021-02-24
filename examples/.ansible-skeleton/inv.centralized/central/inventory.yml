@@ -1,0 +1,15 @@
+zookeeper:
+  children:
+    zookeeper_central:
+    
+kafka_broker:
+  children:
+    kafka_broker_central:
+    
+control_center:
+  children:
+    control_center_central:
+    
+schema_registry:
+  children:
+    schema_registry_central:
