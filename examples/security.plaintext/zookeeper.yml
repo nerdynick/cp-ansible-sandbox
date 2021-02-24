@@ -8,16 +8,6 @@
     - import_role:
         name: confluent.variables
 
-    - name: Print some debug information
-      debug: 
-        msg: "{{ msg.split('\n') }}"
-      vars: 
-          msg: |
-      
-              HOST Variables ("hostvars"):
-              --------------------------------
-              {{ hostvars | to_nice_json }} 
-
     - name: Check if Zookeeper Service Running
       shell: "systemctl show -p SubState {{zookeeper_service_name}}"
       changed_when: false

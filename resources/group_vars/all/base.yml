@@ -1,3 +1,5 @@
+#WARNING: Any changes to this file will effect all examples
+
 #Global Vars
 ansible_become: true
 
@@ -26,7 +28,6 @@ ssl_enabled: false
 ssl_mutual_auth_enabled: false
 
 #Global Settings
-default_internal_replication_factor: 3
 
 #Zookeeper Overrides
 zookeeper_custom_properties:
@@ -44,8 +45,8 @@ kafka_broker:
 kafka_broker_custom_properties:
   confluent.support.metrics.enable: "false" #OPTIONAL: This disables remote metrics reporting. By default this is enabled.
   confluent.support.customer.id: anonymous #OPTIONAL: This is the default value. This is strictly here for documentation sake.
-  default.replication.factor: 3 # Default is currently 1
-  min.insync.replicas: 2 # Default is currently 1
+  default.replication.factor: "{{ [groups['kafka_broker'] | length, 3] | min }}" # Default is currently 1
+  min.insync.replicas: "{{ [[groups['kafka_broker'] | length -1 , 1] | max, 2] | min }}" # Default is currently 1
   log.retention.hours: 3 # IGNORE: Adjusted for use in my small VMs. 
   confluent.metrics.reporter.topic.retention.ms: 10800000 #IGNORE: Adjusted low for test envs. 
   
@@ -54,7 +55,6 @@ kafka_broker_service_environment_overrides:
   KAFKA_HEAP_OPTS: "-Xms1g -Xmx4g -XX:MetaspaceSize=96m -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M -XX:MinMetaspaceFreeRatio=50 -XX:MaxMetaspaceFreeRatio=80"
 
 #Control Center Overrides
-control_center_log_dir: /var/lib/confluent/control-center
 control_center_rocksdb_path: "/var/lib/confluent/control-center/rocksdb"
 control_center_custom_properties: {}
   # confluent.controlcenter.ksql.enable: 'true' #Set to false if no KSQL Servers

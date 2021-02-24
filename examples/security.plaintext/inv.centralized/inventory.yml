@@ -2,10 +2,18 @@ main:
   children:
     zookeeper_main:
       hosts:
-        zk[01:03].main.nikoleta.aws.ps.confluent.io:
+        zk01:
+          ansible_host: zk01.main.nikoleta.aws.ps.confluent.io
+        zk02.main.nikoleta.aws.ps.confluent.io:
+          hostname: zk02.main.nikoleta.aws.ps.confluent.io
+        zk03.main.nikoleta.aws.ps.confluent.io:
     kafka_broker_main:
       hosts:
-        kfk[01:03].main.nikoleta.aws.ps.confluent.io:
+        kfk01:
+          ansible_host: kfk01.main.nikoleta.aws.ps.confluent.io
+        kfk02.main.nikoleta.aws.ps.confluent.io:
+          hostname: kfk02.main.nikoleta.aws.ps.confluent.io
+        kfk03.main.nikoleta.aws.ps.confluent.io:
     schema_registry_main:
       hosts:
         sr01.main.nikoleta.aws.ps.confluent.io:

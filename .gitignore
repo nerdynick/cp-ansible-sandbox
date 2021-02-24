@@ -11,3 +11,4 @@
 *.keytab
 .DS_Store
 .pydevproject
+**/error_files
