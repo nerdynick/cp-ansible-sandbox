@@ -1,6 +1,4 @@
-# Example for ....
-
-....
+# Example for deploying a PLAINTEXT Confluent Platform
 
 ## Example Inventories
 

@@ -1,0 +1,35 @@
+zookeeper:
+  hosts:
+    zk01:
+      ansible_host: zk01.nikoleta.aws.ps.confluent.io #Example 1: Alias a host via changing it's SSH address. Introduced with PR #563
+    zk02.nikoleta.aws.ps.confluent.io:
+      hostname: zk02.nikoleta.aws.ps.confluent.io #Example 2: Keep the default SSH address but use a different address for addressing the host internal to the platform. Introduced with PR ##563
+    zk03.nikoleta.aws.ps.confluent.io: #Default/Common way to define a host
+     
+kafka_broker:
+  hosts:
+    kfk01:
+      ansible_host: kfk01.nikoleta.aws.ps.confluent.io
+    kfk02.nikoleta.aws.ps.confluent.io:
+      hostname: kfk02.nikoleta.aws.ps.confluent.io
+    kfk03.nikoleta.aws.ps.confluent.io:
+    
+control_center:
+  hosts:
+    ccc01.nikoleta.aws.ps.confluent.io:
+       
+schema_registry:
+  hosts:
+    sr[01:02].nikoleta.aws.ps.confluent.io:
+                  
+kafka_connect:
+  hosts:
+    connect[01:02].nikoleta.aws.ps.confluent.io:
+                      
+ksql:
+  hosts:
+    ksql01.nikoleta.aws.ps.confluent.io:
+      
+kafka_rest:
+  hosts:
+    rest01.nikoleta.aws.ps.confluent.io:
