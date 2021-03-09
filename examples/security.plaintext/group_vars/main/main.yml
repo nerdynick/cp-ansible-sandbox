@@ -1,0 +1,8 @@
+kafka_broker_metrics_reporter_enabled: true
+monitoring_interceptors_enabled: true
+
+control_center_metrics_kafka_broker_ansible_group: kafka_broker_central
+kafka_broker_metrics_reporter_listener_name: internal
+kafka_connect_monitoring_interceptors_listener_name: internal
+ksql_monitoring_interceptors_listener_name: internal
+kafka_rest_monitoring_interceptors_listener_name: internal

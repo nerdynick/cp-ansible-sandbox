@@ -65,3 +65,5 @@ control_center_custom_properties: {}
 #Schema Registry Overrides
 schema_registry_custom_properties: {}
   # master.eligibility: 'true'
+
+hostname_aliasing_enabled: true

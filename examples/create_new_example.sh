@@ -14,10 +14,10 @@ cd $PROJECT_DIR
 #Copy skeleton
 cp -nR ../.ansible-skeleton/* ./
 
-#Copy basics from cp-ansible
-cp -n ../../cp-ansible/*.yml ./
-cp -n ../../cp-ansible/*.cfg ./
+#Link basics from cp-ansible
+ln -s ../../cp-ansible/*.yml ./
 rm hosts_example.yml
+ln -s ../../cp-ansible/*.cfg ./
 
 #SymLink/Copy base into playbook scope
 ln -fs ../.ansible-base/* ./
